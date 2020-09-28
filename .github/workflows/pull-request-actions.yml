@@ -1,8 +1,9 @@
 name: pull request check workflow
-on: [pull_request]
-  branches:
-  - master
-  - a2
+on:
+  pull_request:
+    branches:
+      - master
+      - a2
 jobs:
   build:
     runs-on: ubuntu-latest
