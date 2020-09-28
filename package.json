@@ -1,0 +1,11 @@
+{
+  "name": "webapp",
+  "version": "1.0.0",
+  "description": "Assignment-2 of Network Structures and Cloud Computing",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Aparna",
+  "license": "ISC"
+}
