@@ -3,6 +3,7 @@ const userService = require("../services/UserService");
 const validator = require("email-validator");
 const passwordValidator = require("password-validator");
 const uuid = require("uuid");
+const auth = require('basic-auth');
 const bcrypt = require("bcrypt");
 
 const { v4: uuidv4 } = require("uuid");
@@ -83,7 +84,7 @@ exports.create = function (request, response) {
     };
     console.log("create user");
 
-    userService.findUserEmail(user)
+    userService.findUserEmail(user.email_address)
         .then(resolve)
         .catch(renderErrorResponse(response));
 
@@ -102,6 +103,39 @@ let renderErrorResponse = (response) => {
         }
     };
     return errorCallback;
+};
+
+exports.get = function(request, response) {
+    const getResponse = (userResponse) => {
+        if(userResponse !== null) {
+            response.json({
+                status: 200,
+                id: userResponse.id,
+                first_name: userResponse.first_name,
+                last_name: userResponse.last_name,
+                email_address: userResponse.email_address,
+                account_created: userResponse.account_created,
+                account_updated: userResponse.account_updated
+            });
+        } else{
+            response.json({
+                status: 401,
+                message: "Access Denied: Authentication error"
+            });
+        }
+    };
+    let credentials = auth(request);
+    if(credentials == undefined) {
+        response.json({
+            status: 401,
+            message: "Access Denied: Authentication error"
+        });
+        return;
+    } else {
+        userService.findUserEmail(credentials.name)
+        .then(getResponse)
+        .catch(renderErrorResponse(response));
+    }
 };
 
 function isValidPassword(password) {

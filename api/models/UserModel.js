@@ -27,11 +27,11 @@ module.exports = (sequelize, Sequelize) => {
         },
         account_created: {
             type: Sequelize.STRING,
-            field: "account_created"
+            field: "createdAt"
         },
         account_updated: {
             type: Sequelize.STRING,
-            field: "account_updated"
+            field: "updatedAt"
         }
     }, { indexes: [{name: 'email_address', unique: true, fields: ['email_address']}]});
 
