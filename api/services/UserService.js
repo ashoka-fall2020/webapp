@@ -7,9 +7,9 @@ exports.createAccount = function (user) {
     return promise;
 };
 
-exports.findUserEmail = function (user) {
+exports.findUserEmail = function (email) {
     const promise = User.findOne({
-        where:{email_address: user.email_address}
+        where:{email_address: email}
     });
     return promise;
-}
+};
