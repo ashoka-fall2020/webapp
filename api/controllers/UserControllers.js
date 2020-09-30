@@ -20,10 +20,10 @@ schema
 
 
 exports.create = function (request, response) {
-    if (!request.body.first_name || !request.body.last_name || !request.body.email_address || !request.body.password) {
+    if (!request.body.first_name || !request.body.last_name || !request.body.username || !request.body.password) {
         response.json({
             status: 400,
-            message: "Bad Request: First name, last name, password, email can not be empty!"
+            message: "Bad Request: First name, last name, password, username can not be empty!"
         });
         return;
     }
@@ -32,6 +32,14 @@ exports.create = function (request, response) {
         response.json({
             status: 400,
             message: "Enter a strong password"
+        });
+        return;
+    }
+
+    if(!validator.validate(request.body.username)) {
+        response.json({
+            status: 400,
+            message: "Invalid email"
         });
         return;
     }
@@ -47,9 +55,8 @@ exports.create = function (request, response) {
         id: uuidv4(),
         first_name: request.body.first_name,
         last_name: request.body.last_name,
-        email_address: request.body.email_address,
-        password: getPasswordHash(request.body.password),
-        username: request.body.email_address
+        username: request.body.username,
+        password: getPasswordHash(request.body.password)
     };
 
     const resolve = (res) => {
@@ -84,10 +91,9 @@ exports.create = function (request, response) {
     };
     console.log("create user");
 
-    userService.findUserEmail(user.email_address)
+    userService.findUserByUserName(user.username)
         .then(resolve)
         .catch(renderErrorResponse(response));
-
 };
 
 // error function
@@ -113,7 +119,7 @@ exports.get = function(request, response) {
                 id: userResponse.id,
                 first_name: userResponse.first_name,
                 last_name: userResponse.last_name,
-                email_address: userResponse.email_address,
+                username: userResponse.username,
                 account_created: userResponse.account_created,
                 account_updated: userResponse.account_updated
             });
@@ -132,9 +138,64 @@ exports.get = function(request, response) {
         });
         return;
     } else {
-        userService.findUserEmail(credentials.name)
+        userService.findUserByUserName(credentials.name)
         .then(getResponse)
         .catch(renderErrorResponse(response));
+    }
+};
+
+exports.update = function(request, response) {
+    if (!request.body.first_name || !request.body.last_name || !request.body.username || !request.body.password) {
+        response.json({
+            status: 400,
+            message: "Bad Request: First name, last name, password, username can not be empty!"
+        });
+        return;
+    }
+    if(!validator.validate(request.body.username)) {
+        response.json({
+            status: 400,
+            message: "Invalid email"
+        });
+        return;
+    }
+    const updateResponse = (upRes) => {
+        if(upRes != null) {
+            response.json({
+                status: 200,
+                message: "Update Successfully"
+            });
+        } else {
+            response.json({
+                status: 400,
+                message: "Update failed"
+            });
+        }
+    };
+
+    const getResponse = (userResponse) => {
+        if(userResponse !== null) {
+            userService.updateUserDetails(request, userResponse.id)
+                .then(updateResponse)
+                .catch(renderErrorResponse(response));
+        } else{
+            response.json({
+                status: 401,
+                message: "Access Denied: Authentication error"
+            });
+        }
+    };
+    let credentials = auth(request);
+    if(credentials == undefined) {
+        response.json({
+            status: 401,
+            message: "Access Denied: Authentication error"
+        });
+        return;
+    } else {
+        userService.findUserByUserName(credentials.name)
+            .then(getResponse)
+            .catch(renderErrorResponse(response));
     }
 };
 

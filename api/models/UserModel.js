@@ -2,7 +2,7 @@ module.exports = (sequelize, Sequelize) => {
     const User = sequelize.define("user", {
         id: {
             type: Sequelize.STRING.BINARY,
-            primaryKey: true
+            primaryKey: true,
         },
         first_name: {
             type: Sequelize.STRING,
@@ -12,18 +12,14 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING,
             allowNull: false
         },
-        email_address: {
-            type: Sequelize.STRING,
-            allowNull: false,
-            unique: true
-        },
         password: {
             type: Sequelize.STRING,
             allowNull: false
         },
         username: {
             type: Sequelize.STRING,
-            allowNull: false
+            allowNull: false,
+            unique: true
         },
         account_created: {
             type: Sequelize.STRING,
@@ -33,7 +29,7 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING,
             field: "updatedAt"
         }
-    }, { indexes: [{name: 'email_address', unique: true, fields: ['email_address']}]});
+    }, { indexes: [{name: 'username', unique: true, fields: ['username']}]});
 
     return User;
 };

@@ -7,9 +7,23 @@ exports.createAccount = function (user) {
     return promise;
 };
 
-exports.findUserEmail = function (email) {
+exports.findUserByUserName = function (username) {
     const promise = User.findOne({
-        where:{email_address: email}
+        where:{username: username}
     });
+    return promise;
+};
+
+exports.updateUserDetails = function(request, userId) {
+    console.log("request update")
+    const promise = User.update({
+        username: request.body.username,
+        password: request.body.password,
+        first_name: request.body.first_name,
+        last_name: request.body.last_name
+    }, {
+        where: {id: userId}
+        }
+    );
     return promise;
 };
