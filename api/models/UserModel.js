@@ -30,6 +30,5 @@ module.exports = (sequelize, Sequelize) => {
             field: "updatedAt"
         }
     }, { indexes: [{name: 'username', unique: true, fields: ['username']}]});
-
     return User;
 };

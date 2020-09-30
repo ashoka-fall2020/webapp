@@ -1,3 +1,4 @@
+/* User related services create account, get user details, update user details*/
 const db = require("../models");
 const User = db.user;
 
@@ -14,15 +15,14 @@ exports.findUserByUserName = function (username) {
     return promise;
 };
 
-exports.updateUserDetails = function(request, userId) {
+exports.updateUserDetails = function(request, userResponse) {
     console.log("request update")
     const promise = User.update({
-        username: request.body.username,
         password: request.body.password,
         first_name: request.body.first_name,
         last_name: request.body.last_name
     }, {
-        where: {id: userId}
+        where: {username: userResponse.username}
         }
     );
     return promise;
