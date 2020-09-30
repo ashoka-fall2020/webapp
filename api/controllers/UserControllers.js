@@ -59,7 +59,7 @@ exports.create = function (request, response) {
 
 // Error function
 let handleDbError = (response) => {
-    const errorCallback = (error) => {
+    const errorCallBack = (error) => {
         if (error) {
             response.status(500);
             response.json({
@@ -68,13 +68,11 @@ let handleDbError = (response) => {
             });
         }
     };
-    return errorCallback;
+    return errorCallBack;
 };
 
 exports.get = function(request, response) {
     const handleFindByUserNameResponse = (userResponse) => {
-        console.log(userResponse.username);
-        console.log(bcrypt.compareSync(credentials.pass, userResponse.password));
         if(userResponse != null && bcrypt.compareSync(credentials.pass, userResponse.password)) {
             response.json(getResponseUser(userResponse));
         } else{
@@ -110,7 +108,7 @@ exports.update = function(request, response) {
 
     const handleFindByUserNameResponse = (userResponse) => {
         if(userResponse !== null && bcrypt.compareSync(credentials.pass, userResponse.password)) {
-            request.body.password = getPasswordHash(request.body.password)
+            request.body.password = getPasswordHash(request.body.password);
             userService.updateUserDetails(request, userResponse)
                 .then(handleUpdateResponse)
                 .catch(handleDbError(response));
@@ -120,8 +118,8 @@ exports.update = function(request, response) {
     };
 
     let credentials = auth(request);
-    if(credentials === undefined) {
-        setAccessDeniedResponse();
+    if(credentials === undefined || credentials.name !== request.body.username) {
+        setAccessDeniedResponse(response);
    } else {
         userService.findUserByUserName(credentials.name)
             .then(handleFindByUserNameResponse)
@@ -130,7 +128,7 @@ exports.update = function(request, response) {
 };
 
 function getPasswordHash(password) {
-    const salt = bcrypt.genSaltSync();
+    const salt = bcrypt.genSaltSync(saltRounds);
     return bcrypt.hashSync(password, salt);
 }
 
@@ -190,14 +188,15 @@ function validateCreateUserRequest(request, response) {
 
 function validateUpdateUserRequest(request, response) {
     if (!request.body.first_name || !request.body.last_name || !request.body.password
-        || request.body.first_name.length === 0 || request.body.last_name.length === 0 || request.body.password.length === 0) {
+        || request.body.first_name.length === 0 || request.body.last_name.length === 0 ||
+        request.body.password.length === 0 || !request.body.username || request.body.username.length === 0) {
         response.json({
             status: 400,
             message: "Bad Request"
         });
         return response;
     }
-    if(request.body.username != null || request.body.account_created != null ||  request.body.account_updated != null || request.body.id != null) {
+    if(request.body.account_created != null ||  request.body.account_updated != null || request.body.id != null) {
         response.json({
             status: 400,
             message: "Bad Request"

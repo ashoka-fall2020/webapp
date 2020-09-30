@@ -14,7 +14,14 @@ function main () {
     app.use(cors());
 
     // parse requests of content-type - application/json
-     app.use(bodyParser.json());
+    app.use(bodyParser.json());
+    app.use (function (error, request, response, next){
+        //Catch json error
+        return response.json({
+            status: 400,
+            message: "Bad request"
+        });
+    });
 
     let routes = require('./api/routes/Routes');
     routes(app); //register the route
