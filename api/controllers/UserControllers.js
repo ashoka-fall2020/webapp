@@ -1,152 +1,207 @@
-const db = require("../models");
 const userService = require("../services/UserService");
-const validator = require("email-validator");
+const emailValidator = require("email-validator");
 const passwordValidator = require("password-validator");
-const uuid = require("uuid");
 const auth = require('basic-auth');
 const bcrypt = require("bcrypt");
 
-const { v4: uuidv4 } = require("uuid");
+const {v4: uuidv4} = require("uuid");
 
 const saltRounds = 10;
 
-var schema = new passwordValidator();
+let schema = new passwordValidator();
 
 schema
-    .is().min(8)                                    // Minimum length 8
-    .is().max(64)                                   // Maximum length 64
-    .has().not([/(.)\1{9,}/])                   //avoid repeating characters
-    .has().not().spaces()                           // Should not have spaces
+    .is().min(9)
+    .is().max(64)
+    .has().letters()
+    .has().digits()
+    .has().not().spaces()
 
 
 exports.create = function (request, response) {
-    if (!request.body.first_name || !request.body.last_name || !request.body.email_address || !request.body.password) {
-        response.json({
-            status: 400,
-            message: "Bad Request: First name, last name, password, email can not be empty!"
-        });
-        return;
-    }
-
-    if(!schema.validate(request.body.password)) {
-        response.json({
-            status: 400,
-            message: "Enter a strong password"
-        });
-        return;
-    }
-
-//     if (!isValidPassword(request.body.password)){
-        //         response.json({
-        //             status: 400,
-        //             message: "Bad request: Please enter a strong password"
-        //          });
-        //     }
-    console.log("before create");
+    if (validateCreateUserRequest(request, response) != null) return;
     const user = {
         id: uuidv4(),
         first_name: request.body.first_name,
         last_name: request.body.last_name,
-        email_address: request.body.email_address,
-        password: getPasswordHash(request.body.password),
-        username: request.body.email_address
+        username: request.body.username,
+        password: getPasswordHash(request.body.password)
     };
 
-    const resolve = (res) => {
-        if (res != null) {
+    const handleFindByUserNameResponse = (usernameRes) => {
+        if (usernameRes != null) {
             response.json({
                 status: 400,
-                message: "Email already exists"
+                message: "Bad request: Email already exists"
             });
         } else{
             userService.createAccount(user)
-                .then(resolveSignUp)
-                .catch(renderErrorResponse(response));
+                .then(handleCreateUserResponse)
+                .catch(handleDbError(response));
         }
+    };
 
-    }
-    const resolveSignUp = (signUpResponse) => {
-        console.log("signup response");
+    const handleCreateUserResponse = (signUpResponse) => {
         if (signUpResponse != null) {
-            console.log("success");
-            response.json({
-                status: 200,
-                user: signUpResponse,
-                message: "User created successfully"
-            });
+            response.json(getResponseUser(signUpResponse));
         } else {
-            console.log("error");
             response.json({
-                status: 400,
-                message: "Error in creating user account"
+                status: 500,
+                message: "Server error: Error in creating user account"
             });
         }
     };
-    console.log("create user");
 
-    userService.findUserEmail(user.email_address)
-        .then(resolve)
-        .catch(renderErrorResponse(response));
-
+    userService.findUserByUserName(user.username)
+        .then(handleFindByUserNameResponse)
+        .catch(handleDbError(response));
 };
 
-// error function
-let renderErrorResponse = (response) => {
-    const errorCallback = (error) => {
+// Error function
+let handleDbError = (response) => {
+    const errorCallBack = (error) => {
         if (error) {
-            console.log(error.message);
-            console.log(error.code);
             response.status(500);
             response.json({
+                status: 500,
                 message: error.message
             });
         }
     };
-    return errorCallback;
+    return errorCallBack;
 };
 
 exports.get = function(request, response) {
-    const getResponse = (userResponse) => {
-        if(userResponse !== null) {
-            response.json({
-                status: 200,
-                id: userResponse.id,
-                first_name: userResponse.first_name,
-                last_name: userResponse.last_name,
-                email_address: userResponse.email_address,
-                account_created: userResponse.account_created,
-                account_updated: userResponse.account_updated
-            });
+    const handleFindByUserNameResponse = (userResponse) => {
+        if(userResponse != null && bcrypt.compareSync(credentials.pass, userResponse.password)) {
+            response.json(getResponseUser(userResponse));
         } else{
-            response.json({
-                status: 401,
-                message: "Access Denied: Authentication error"
-            });
+            setAccessDeniedResponse(response);
         }
     };
     let credentials = auth(request);
-    if(credentials == undefined) {
-        response.json({
-            status: 401,
-            message: "Access Denied: Authentication error"
-        });
-        return;
+    if(credentials === undefined) {
+        setAccessDeniedResponse(response);
     } else {
-        userService.findUserEmail(credentials.name)
-        .then(getResponse)
-        .catch(renderErrorResponse(response));
+        userService.findUserByUserName(credentials.name)
+        .then(handleFindByUserNameResponse)
+        .catch(handleDbError(response));
     }
 };
 
-function isValidPassword(password) {
-    let passwordRegex = "/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[^\w\s]).{9,}$/";
-    if (password.match(passwordRegex) != null) {
-        return true;
+exports.update = function(request, response) {
+    if(validateUpdateUserRequest(request, response) != null) return;
+
+    const handleUpdateResponse = (upRes) => {
+        if(upRes != null) {
+            response.json({
+                status: 204,
+                message: "User details updated Successfully"
+            });
+        } else {
+            response.json({
+                status: 500,
+                message: "Internal server error: Update failed"
+            });
+        }
+    };
+
+    const handleFindByUserNameResponse = (userResponse) => {
+        if(userResponse !== null && bcrypt.compareSync(credentials.pass, userResponse.password)) {
+            request.body.password = getPasswordHash(request.body.password);
+            userService.updateUserDetails(request, userResponse)
+                .then(handleUpdateResponse)
+                .catch(handleDbError(response));
+        } else{
+            setAccessDeniedResponse(response);
+        }
+    };
+
+    let credentials = auth(request);
+    if(credentials === undefined || credentials.name !== request.body.username) {
+        setAccessDeniedResponse(response);
+   } else {
+        userService.findUserByUserName(credentials.name)
+            .then(handleFindByUserNameResponse)
+            .catch(handleDbError(response));
     }
-    return false;
-}
+};
 
 function getPasswordHash(password) {
-    const salt = bcrypt.genSaltSync();
+    const salt = bcrypt.genSaltSync(saltRounds);
     return bcrypt.hashSync(password, salt);
+}
+
+function getResponseUser(user) {
+     let apiResponse = {
+        id: user.id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        username: user.username,
+        account_created: user.account_created,
+        account_updated: user.account_updated
+    };
+     return apiResponse;
+}
+
+function setAccessDeniedResponse(response) {
+    let apiResponse = response.json({
+        status: 401,
+        message: "Access Denied: Authentication error"
+    });
+    return apiResponse;
+}
+
+function validateCreateUserRequest(request, response) {
+    if (!request.body.first_name || !request.body.last_name || !request.body.username || !request.body.password
+        || request.body.first_name.length === 0 || request.body.last_name.length === 0 || request.body.username.length === 0 || request.body.password === 0) {
+        response.json({
+            status: 400,
+            message: "Bad Request: First name, last name, password, username can not be empty!"
+        });
+        return response;
+    }
+    if(request.body.account_created != null ||  request.body.account_updated != null || request.body.id != null) {
+        response.json({
+            status: 400,
+            message: "Bad Request: Unexpected params in request"
+        });
+        return response;
+    }
+    if(!schema.validate(request.body.password)) {
+        response.json({
+            status: 400,
+            message: "Bad Request: Enter a strong password"
+        });
+        return response;
+    }
+
+    if(!emailValidator.validate(request.body.username)) {
+        response.json({
+            status: 400,
+            message: "Bad Request: Invalid email, username should be an email."
+        });
+        return response;
+    }
+    return null;
+}
+
+function validateUpdateUserRequest(request, response) {
+    if (!request.body.first_name || !request.body.last_name || !request.body.password
+        || request.body.first_name.length === 0 || request.body.last_name.length === 0 ||
+        request.body.password.length === 0 || !request.body.username || request.body.username.length === 0) {
+        response.json({
+            status: 400,
+            message: "Bad Request"
+        });
+        return response;
+    }
+    if(request.body.account_created != null ||  request.body.account_updated != null || request.body.id != null) {
+        response.json({
+            status: 400,
+            message: "Bad Request"
+        });
+        return response;
+    }
+    return null;
 }
