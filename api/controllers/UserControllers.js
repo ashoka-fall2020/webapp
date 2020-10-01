@@ -170,7 +170,7 @@ exports.validateCreateUserRequest = function (request, response) {
     if(!schema.validate(request.body.password)) {
         response.json({
             status: 400,
-            message: "Bad Request: Enter a strong password"
+            message: "Bad Request: Entered password does not meet the minimum standards"
         });
         return response;
     }
