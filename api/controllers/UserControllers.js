@@ -15,11 +15,44 @@ schema
     .is().max(64)
     .has().letters()
     .has().digits()
-    .has().not().spaces()
+    .has().symbols()
 
+exports.validateCreateUserRequest = function (request, response) {
+    if (!request.body.first_name || !request.body.last_name || !request.body.username || !request.body.password
+        || request.body.first_name.length === 0 || request.body.last_name.length === 0 || request.body.username.length === 0 || request.body.password === 0) {
+        response.json({
+            status: 400,
+            message: "Bad Request: First name, last name, password, username can not be empty!"
+        });
+        return response;
+    }
+    if(request.body.account_created != null ||  request.body.account_updated != null || request.body.id != null) {
+        response.json({
+            status: 400,
+            message: "Bad Request: Unexpected params in request"
+        });
+        return response;
+    }
+    if(!schema.validate(request.body.password)) {
+        response.json({
+            status: 400,
+            message: "Bad Request: Entered password does not meet the minimum standards"
+        });
+        return response;
+    }
+
+    if(!emailValidator.validate(request.body.username)) {
+        response.json({
+            status: 400,
+            message: "Bad Request: Invalid email, username should be an email."
+        });
+        return response;
+    }
+    return null;
+};
 
 exports.create = function (request, response) {
-    if (validateCreateUserRequest(request, response) != null) return;
+    if (exports.validateCreateUserRequest(request, response) != null) return;
     const user = {
         id: uuidv4(),
         first_name: request.body.first_name,
@@ -57,7 +90,7 @@ exports.create = function (request, response) {
         .catch(handleDbError(response));
 };
 
-exports.handleDbError = (response) => {
+const handleDbError = (response) => {
     const errorCallBack = (error) => {
         if (error) {
             response.status(500);
@@ -126,12 +159,12 @@ exports.update = function(request, response) {
     }
 };
 
-exports.getPasswordHash = function (password) {
+let getPasswordHash = function (password) {
     const salt = bcrypt.genSaltSync(saltRounds);
     return bcrypt.hashSync(password, salt);
 };
 
-exports.getResponseUser = function (user) {
+let getResponseUser = function (user) {
      let apiResponse = {
         id: user.id,
         first_name: user.first_name,
@@ -143,7 +176,7 @@ exports.getResponseUser = function (user) {
      return apiResponse;
 };
 
-exports.setAccessDeniedResponse = function (response) {
+let setAccessDeniedResponse = function (response) {
     let apiResponse = response.json({
         status: 401,
         message: "Access Denied: Authentication error"
@@ -151,41 +184,7 @@ exports.setAccessDeniedResponse = function (response) {
     return apiResponse;
 };
 
-exports.validateCreateUserRequest = function (request, response) {
-    if (!request.body.first_name || !request.body.last_name || !request.body.username || !request.body.password
-        || request.body.first_name.length === 0 || request.body.last_name.length === 0 || request.body.username.length === 0 || request.body.password === 0) {
-        response.json({
-            status: 400,
-            message: "Bad Request: First name, last name, password, username can not be empty!"
-        });
-        return response;
-    }
-    if(request.body.account_created != null ||  request.body.account_updated != null || request.body.id != null) {
-        response.json({
-            status: 400,
-            message: "Bad Request: Unexpected params in request"
-        });
-        return response;
-    }
-    if(!schema.validate(request.body.password)) {
-        response.json({
-            status: 400,
-            message: "Bad Request: Entered password does not meet the minimum standards"
-        });
-        return response;
-    }
-
-    if(!emailValidator.validate(request.body.username)) {
-        response.json({
-            status: 400,
-            message: "Bad Request: Invalid email, username should be an email."
-        });
-        return response;
-    }
-    return null;
-};
-
-exports.validateUpdateUserRequest = function (request, response) {
+let validateUpdateUserRequest = function (request, response) {
     if (!request.body.first_name || !request.body.last_name || !request.body.password
         || request.body.first_name.length === 0 || request.body.last_name.length === 0 ||
         request.body.password.length === 0 || !request.body.username || request.body.username.length === 0) {
@@ -199,6 +198,13 @@ exports.validateUpdateUserRequest = function (request, response) {
         response.json({
             status: 400,
             message: "Bad Request"
+        });
+        return response;
+    }
+    if(!schema.validate(request.body.password)) {
+        response.json({
+            status: 400,
+            message: "Bad Request: Entered password does not meet the minimum standards"
         });
         return response;
     }
