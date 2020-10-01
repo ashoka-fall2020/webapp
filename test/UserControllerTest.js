@@ -19,7 +19,8 @@ describe("Validate Create User Request", function() {
             json: function (val) {
                 this._status = val.status;
                 this._message = val.message;
-            }
+            },
+            status: () => {}
         };
         controller.validateCreateUserRequest(request, response);
         assert.equal(response._message, "Bad Request: First name, last name, password, username can not be empty!");
@@ -41,7 +42,8 @@ describe("Validate Create User Request", function() {
             json: function (val) {
                 this._status = val.status;
                 this._message = val.message;
-            }
+            },
+            status: () => {}
         };
         controller.validateCreateUserRequest(request, response);
         assert.equal(response._message, "Bad Request: First name, last name, password, username can not be empty!");
@@ -63,7 +65,8 @@ describe("Validate Create User Request", function() {
             json: function (val) {
                 this._status = val.status;
                 this._message = val.message;
-            }
+            },
+            status: () => {}
         };
         controller.validateCreateUserRequest(request, response);
         assert.equal(response._message, "Bad Request: Entered password does not meet the minimum standards");
@@ -85,7 +88,8 @@ describe("Validate Create User Request", function() {
             json: function (val) {
                 this._status = val.status;
                 this._message = val.message;
-            }
+            },
+            status: () => {}
         };
         controller.validateCreateUserRequest(request, response);
         assert.equal(response._message, "Bad Request: Entered password does not meet the minimum standards");
@@ -107,7 +111,8 @@ describe("Validate Create User Request", function() {
             json: function (val) {
                 this._status = val.status;
                 this._message = val.message;
-            }
+            },
+            status: () => {}
         };
         controller.validateCreateUserRequest(request, response);
         assert.equal(response._message, "Bad Request: Invalid email, username should be an email.");
