@@ -1,8 +1,10 @@
+require('dotenv').config();
+
 module.exports = {
-    HOST: "localhost",
-    USER: "root",
-    PASSWORD: "bellevue1@",
-    DB: "webappdb",
+    HOST: process.env.DATABASE_HOST_NAME,
+    USER: process.env.DATABASE_USER_NAME,
+    PASSWORD: process.env.DATABASE_PASSWORD,
+    DB: process.env.DATABASE_NAME,
     dialect: "mysql",
     pool: {
         max: 5,

@@ -16,7 +16,6 @@ exports.findUserByUserName = function (username) {
 };
 
 exports.updateUserDetails = function(request, userResponse) {
-    console.log("request update")
     const promise = User.update({
         password: request.body.password,
         first_name: request.body.first_name,

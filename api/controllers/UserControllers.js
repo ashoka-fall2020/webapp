@@ -19,7 +19,7 @@ schema
 
 exports.validateCreateUserRequest = function (request, response) {
     if (!request.body.first_name || !request.body.last_name || !request.body.username || !request.body.password
-        || request.body.first_name.length === 0 || request.body.last_name.length === 0 || request.body.username.length === 0 || request.body.password === 0) {
+        || request.body.first_name.length === 0 || request.body.last_name.length === 0 || request.body.username.length === 0 || request.body.password.length === 0) {
         response.json({
             status: 400,
             message: "Bad Request: First name, last name, password, username can not be empty!"
