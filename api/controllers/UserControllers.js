@@ -20,6 +20,7 @@ schema
 exports.validateCreateUserRequest = function (request, response) {
     if (!request.body.first_name || !request.body.last_name || !request.body.username || !request.body.password
         || request.body.first_name.length === 0 || request.body.last_name.length === 0 || request.body.username.length === 0 || request.body.password.length === 0) {
+        response.status(400);
         response.json({
             status: 400,
             message: "Bad Request: First name, last name, password, username can not be empty!"
@@ -27,6 +28,7 @@ exports.validateCreateUserRequest = function (request, response) {
         return response;
     }
     if(request.body.account_created != null ||  request.body.account_updated != null || request.body.id != null) {
+        response.status(400);
         response.json({
             status: 400,
             message: "Bad Request: Unexpected params in request"
@@ -34,6 +36,7 @@ exports.validateCreateUserRequest = function (request, response) {
         return response;
     }
     if(!schema.validate(request.body.password)) {
+        response.status(400);
         response.json({
             status: 400,
             message: "Bad Request: Entered password does not meet the minimum standards"
@@ -42,6 +45,7 @@ exports.validateCreateUserRequest = function (request, response) {
     }
 
     if(!emailValidator.validate(request.body.username)) {
+        response.status(400);
         response.json({
             status: 400,
             message: "Bad Request: Invalid email, username should be an email."
@@ -63,6 +67,7 @@ exports.create = function (request, response) {
 
     const handleFindByUserNameResponse = (usernameRes) => {
         if (usernameRes != null) {
+            response.status(400);
             response.json({
                 status: 400,
                 message: "Bad request: Email already exists"
@@ -78,6 +83,7 @@ exports.create = function (request, response) {
         if (signUpResponse != null) {
             response.json(getResponseUser(signUpResponse));
         } else {
+            response.status(500);
             response.json({
                 status: 500,
                 message: "Server error: Error in creating user account"
@@ -126,11 +132,13 @@ exports.update = function(request, response) {
 
     const handleUpdateResponse = (upRes) => {
         if(upRes != null) {
+            response.status(204);
             response.json({
                 status: 204,
                 message: "User details updated Successfully"
             });
         } else {
+            response.status(500);
             response.json({
                 status: 500,
                 message: "Internal server error: Update failed"
@@ -177,6 +185,7 @@ let getResponseUser = function (user) {
 };
 
 let setAccessDeniedResponse = function (response) {
+    response.status(401);
     let apiResponse = response.json({
         status: 401,
         message: "Access Denied: Authentication error"
@@ -188,6 +197,7 @@ let validateUpdateUserRequest = function (request, response) {
     if (!request.body.first_name || !request.body.last_name || !request.body.password
         || request.body.first_name.length === 0 || request.body.last_name.length === 0 ||
         request.body.password.length === 0 || !request.body.username || request.body.username.length === 0) {
+        response.status(400);
         response.json({
             status: 400,
             message: "Bad Request"
@@ -195,6 +205,7 @@ let validateUpdateUserRequest = function (request, response) {
         return response;
     }
     if(request.body.account_created != null ||  request.body.account_updated != null || request.body.id != null) {
+        response.status(400);
         response.json({
             status: 400,
             message: "Bad Request"
@@ -202,6 +213,7 @@ let validateUpdateUserRequest = function (request, response) {
         return response;
     }
     if(!schema.validate(request.body.password)) {
+        response.status(400);
         response.json({
             status: 400,
             message: "Bad Request: Entered password does not meet the minimum standards"
