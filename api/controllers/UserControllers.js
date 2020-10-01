@@ -57,8 +57,7 @@ exports.create = function (request, response) {
         .catch(handleDbError(response));
 };
 
-// Error function
-let handleDbError = (response) => {
+exports.handleDbError = (response) => {
     const errorCallBack = (error) => {
         if (error) {
             response.status(500);
@@ -127,12 +126,12 @@ exports.update = function(request, response) {
     }
 };
 
-function getPasswordHash(password) {
+exports.getPasswordHash = function (password) {
     const salt = bcrypt.genSaltSync(saltRounds);
     return bcrypt.hashSync(password, salt);
-}
+};
 
-function getResponseUser(user) {
+exports.getResponseUser = function (user) {
      let apiResponse = {
         id: user.id,
         first_name: user.first_name,
@@ -142,17 +141,17 @@ function getResponseUser(user) {
         account_updated: user.account_updated
     };
      return apiResponse;
-}
+};
 
-function setAccessDeniedResponse(response) {
+exports.setAccessDeniedResponse = function (response) {
     let apiResponse = response.json({
         status: 401,
         message: "Access Denied: Authentication error"
     });
     return apiResponse;
-}
+};
 
-function validateCreateUserRequest(request, response) {
+exports.validateCreateUserRequest = function (request, response) {
     if (!request.body.first_name || !request.body.last_name || !request.body.username || !request.body.password
         || request.body.first_name.length === 0 || request.body.last_name.length === 0 || request.body.username.length === 0 || request.body.password === 0) {
         response.json({
@@ -184,9 +183,9 @@ function validateCreateUserRequest(request, response) {
         return response;
     }
     return null;
-}
+};
 
-function validateUpdateUserRequest(request, response) {
+exports.validateUpdateUserRequest = function (request, response) {
     if (!request.body.first_name || !request.body.last_name || !request.body.password
         || request.body.first_name.length === 0 || request.body.last_name.length === 0 ||
         request.body.password.length === 0 || !request.body.username || request.body.username.length === 0) {
@@ -204,4 +203,4 @@ function validateUpdateUserRequest(request, response) {
         return response;
     }
     return null;
-}
+};
