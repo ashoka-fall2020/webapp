@@ -13,4 +13,7 @@ module.exports = app => {
        // .post(question.createQuestion);
         .post(question.addQuestion);
 
+    app.route('/v1/question/:question_id')
+        .put(question.updateQuestion);
+
 };

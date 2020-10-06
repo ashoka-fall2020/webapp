@@ -12,6 +12,9 @@ exports.addQuestion = function (question) {
 
 exports.addQuestion_ = function (question) {
     let addAllQuestionCategoryIds = function (categories, questionId) {
+        if (!categories || categories.length === 0) {
+            return;
+        }
         categories = categories.map(category =>category.category);
         console.log("inside findAllQuestionCategoryIds", categories);
         db.sequelize.query('SELECT category_id FROM categories WHERE category in (?)',
@@ -41,7 +44,6 @@ exports.addQuestion_ = function (question) {
         });
         values = values.substr(0, values.length-1);
         let prefix = "INSERT INTO `categories` (category_id, category) VALUES ";
-        console.log("JHBVUGVUVUVGUYVYVUY", values);
         let query = prefix + values;
         return db.sequelize.query(query, () => "Adding values to category table!");
     };
@@ -63,9 +65,43 @@ exports.addQuestion_ = function (question) {
     console.log("filter cats: ", filterCats);
     if(filterCats.length !== 0) {
         insertNonExistCategory(filterCats);
-        addAllQuestionCategoryIds(question.categories, question.question_id);
     }
     addAllQuestionCategoryIds(question.categories, question.question_id);
     return save;
     };
 
+exports.get = function (id) {
+    let getQuestionById = function (id) {
+            return Question.findOne({
+                where: {question_id: id}
+            });
+    };
+
+    let handleQuestion = function(question) {
+        console.log("***question", question);
+        return db.sequelize.query("select cat.category_id, cat.category from `categories` cat inner join `question_categories` " +
+            "qcat on cat.category_id = qcat.category_id where qcat.question_id = " + "'" + question.question_id + "'",
+            { replacements: [], type: db.sequelize.QueryTypes.SELECT });
+    };
+
+    getQuestionById(id).then(questionDb => {
+        return  {_question: questionDb, _promise: handleQuestion(questionDb)};
+    }).catch(() => {});
+};
+
+// This is for just fetching question without any categories
+exports.findQuestionById = function (id) {
+    const promise = Question.findOne({
+        where:{question_id: id}
+    });
+    return promise;
+};
+
+exports.updateQuestion = function(question) {
+    const promise = Question.update({
+        question_text: question.question_text
+    }, {
+        where:{question_id: question.question_id}
+    });
+    return promise;
+};

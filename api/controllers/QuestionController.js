@@ -118,15 +118,6 @@ const handleDbError = (response) => {
     return errorCallBack;
 };
 
-let setAccessDeniedResponse = function (response) {
-    response.status(401);
-    let apiResponse = response.json({
-        status: 401,
-        message: "Access Denied: Authentication error"
-    });
-    return apiResponse;
-};
-
 exports.addQuestion = function (request, response) {
 
     if(request.body.question_text === null || request.body.question_text.length === 0) {
@@ -147,7 +138,11 @@ exports.addQuestion = function (request, response) {
 
     let credentials = auth(request);
     if(credentials === undefined) {
-        setAccessDeniedResponse(response);
+        response.status(401);
+        response.json({
+            status: 401,
+            message: "Access Denied: Authentication error"
+        });
         return response;
     } else {
         userService.findUserByUserName(credentials.name)
@@ -157,16 +152,108 @@ exports.addQuestion = function (request, response) {
                     question.categories = request.body.categories;
                     questionService.addQuestion_(question)
                         .then((successResponse) => {
-                            response.status(200);
-                            response.json(successResponse);
+                            let questionPayload = questionService.get(question.question_id);
+                            let prom = questionPayload._promise;
+                            let _question = questionPayload._question;
+                            let out = {};
+                            prom.then((object) => {
+                                    out.question_id = _question.question_id;
+                                    out.created_timestamp = _question.createdAt;
+                                    out.updated_timestamp = _question.updatedAt;
+                                    out.user_id = _question.user_id;
+                                    out.question_text = _question.question_text;
+                                    out.categories = object;
+                                    response.status(200);
+                                    response.write(JSON.stringify(out));
+                            }).catch(() => console.log("in map's catch"));
                             return response;
                         })
                         .catch(handleDbError(response));
                 } else{
-                    setAccessDeniedResponse(userResponse);
-                    return userResponse;
+                    console.log("iam here");
+                    response.status(401);
+                    response.json({
+                        status: 401,
+                        message: "Access Denied: Authentication error"
+                    });
+                    return response;
                 }
             })
             .catch(handleDbError(response));
     };
-}
+};
+
+exports.updateQuestion = function (request, response) {
+    if(request.body.question_text === null || request.body.question_text.length === 0) {
+        console.log("error updating question");
+        response.json({
+            status: 400,
+            message: "Bad request: Question text cannot be empty"
+        });
+        return;
+    }
+    if(!request.params.question_id || request.params.question_id === null) {
+        response.status(400);
+        response.json({
+            status: 400,
+            message: "Bad Request"
+        });
+        return response;
+    }
+    const updateQuestion = {
+        question_id: request.params.question_id,
+        question_text: request.body.question_text,
+        user_id: "",
+        categories: []
+    };
+
+    const handleQuestionResponse = (dbQuestion) => {
+        if (dbQuestion != null) {
+           if(dbQuestion.user_id === updateQuestion.user_id) {
+
+           } else{
+               response.status(401);
+               response.json({
+                   status: 401,
+                   message: "Access Denied: Authentication error"
+               });
+               return response;
+           }
+        } else {
+            response.status(400);
+            response.json({
+                status: 404,
+                message: "Not found"
+            });
+            return response;
+        }
+    } ;
+    let userCredentials = auth(request);
+    if(userCredentials === undefined) {
+        response.status(401);
+        response.json({
+            status: 401,
+            message: "Access Denied: Authentication error"
+        });
+        return response;
+    } else {
+        userService.findUserByUserName(userCredentials.name)
+            .then((userResponse) => {
+                if(userResponse != null && bcrypt.compareSync(userCredentials.pass, userResponse.password)) {
+                    //fetch question and validate if it is the user's
+                    questionService.findQuestionById(updateQuestion.question_id)
+                        .then(handleQuestionResponse)
+                        .catch(handleDbError(response));
+                } else{
+                    console.log("iam here");
+                    response.status(401);
+                    response.json({
+                        status: 401,
+                        message: "Access Denied: Authentication error"
+                    });
+                    return response;
+                }
+            })
+            .catch(handleDbError(response));
+    };
+};
