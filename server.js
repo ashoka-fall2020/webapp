@@ -26,13 +26,13 @@ function main () {
     let routes = require('./api/routes/Routes');
     routes(app); //register the route
 
-    db.sequelize.sync();
+   //db.sequelize.sync();
 
 
 
-    // db.sequelize.sync({ force: true }).then(() => {
-    //     console.log("Drop and re-sync db.");
-    // });
+     db.sequelize.sync({ force: true }).then(() => {
+        console.log("Drop and re-sync db.");
+    });
 }
 main();
 

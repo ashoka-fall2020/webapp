@@ -9,7 +9,10 @@ const {v4: uuidv4} = require("uuid");
 const auth = require('basic-auth');
 const bcrypt = require("bcrypt");
 
+
+
 exports.createQuestion = function (request, response) {
+    let question_id = "";
 // Validate Question Request
 
     if(request.body.question_text === null || request.body.question_text.length === 0) {
@@ -31,22 +34,25 @@ exports.createQuestion = function (request, response) {
         if (allCatRes != null) {
            let filterCats =  catService.filterCategories(allCatRes, request.body.categories);
            if(filterCats.length === 0) {
-               console.log("no cats to enter");
-               response.status(200);
-               response.json({
-                   status: 200,
-                   message: "OK"
-               });
-               return response;
+               catService.addAllQuestionCategoryIds(request.body.categories, question_id)
+                   .then(() => {
+                       response.status(200);
+                       response.json({
+                           status: 200,
+                           message: "OK"
+                       })
+                       return response;
+                   })
+                   .catch(handleDbError(response));
            }else{
                catService.insertNonExistCategory(filterCats)
-                .then(x => {
-                    console.log("Rows affected: ", x)
+                .then(() => {
+                    catService.addAllQuestionCategoryIds(request.body.categories, question_id);
                     response.status(200);
                     response.json({
                         status: 200,
                         message: "OK"
-                    });
+                    })
                     return response;
                 });
            }
@@ -56,6 +62,7 @@ exports.createQuestion = function (request, response) {
     const handleCreateQuestionResponse = (successResponse) => {
         if (successResponse != null) {
             console.log("^^^success creating question", successResponse);
+            question_id = successResponse.question_id;
             if(!request.body.categories || request.body.categories.length === 0) {
                 response.status(200);
                 response.json(successResponse);
