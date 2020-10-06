@@ -26,3 +26,11 @@ exports.updateUserDetails = function(request, userResponse) {
     );
     return promise;
 };
+
+
+exports.findUserByUserId = function (user_id) {
+    const promise = User.findOne({
+        where:{id: user_id}
+    });
+    return promise;
+};

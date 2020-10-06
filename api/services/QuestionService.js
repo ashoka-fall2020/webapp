@@ -97,11 +97,19 @@ exports.findQuestionById = function (id) {
     return promise;
 };
 
+
 exports.updateQuestion = function(question) {
     const promise = Question.update({
         question_text: question.question_text
     }, {
         where:{question_id: question.question_id}
+    });
+    return promise;
+};
+
+exports.deleteQuestion = function(question_id) {
+    const promise = Question.delete({
+        where:{question_id: question_id}
     });
     return promise;
 };

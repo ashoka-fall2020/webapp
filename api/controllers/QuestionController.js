@@ -257,3 +257,65 @@ exports.updateQuestion = function (request, response) {
             .catch(handleDbError(response));
     };
 };
+
+exports.deleteQuestion = function (request, response) {
+    if(!request.params.question_id) {
+        response.status(400);
+        response.json({
+            status: 400,
+            message: "Bad Request"
+        });
+        return response;
+    }
+
+    const handleGetQuestionResponse = (dbQuestion) => {
+        if (dbQuestion != null) {
+            if(dbQuestion.user_id === updateQuestion.user_id) {
+
+            } else{
+                response.status(401);
+                response.json({
+                    status: 401,
+                    message: "Access Denied: Authentication error"
+                });
+                return response;
+            }
+        } else {
+            response.status(400);
+            response.json({
+                status: 404,
+                message: "Not found"
+            });
+            return response;
+        }
+    } ;
+    let userCredentials = auth(request);
+    if(userCredentials === undefined) {
+        response.status(401);
+        response.json({
+            status: 401,
+            message: "Access Denied: Authentication error"
+        });
+        return response;
+    } else {
+        userService.findUserByUserName(userCredentials.name)
+            .then((userResponse) => {
+                if(userResponse != null && bcrypt.compareSync(userCredentials.pass, userResponse.password)) {
+                    //fetch question and validate if it is the user's
+                    questionService.findQuestionById(request.params.question_id)
+                        .then(handleGetQuestionResponse)
+                        .catch(handleDbError(response));
+                } else{
+                    console.log("iam here");
+                    response.status(401);
+                    response.json({
+                        status: 401,
+                        message: "Access Denied: Authentication error"
+                    });
+                    return response;
+                }
+            })
+            .catch(handleDbError(response));
+    };
+
+};

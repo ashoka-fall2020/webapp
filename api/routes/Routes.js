@@ -8,12 +8,15 @@ module.exports = app => {
         .get(user.get);
     app.route('/v1/user/self')
         .put(user.update);
+    app.route('/v1/user/:user_id')
+        .get(user.getByUserId);
 
     app.route('/v1/question/')
-       // .post(question.createQuestion);
         .post(question.addQuestion);
 
     app.route('/v1/question/:question_id')
         .put(question.updateQuestion);
+    app.route('/v1/question/:question_id')
+        .delete(question.deleteQuestion);
 
 };

@@ -222,3 +222,44 @@ let validateUpdateUserRequest = function (request, response) {
     }
     return null;
 };
+
+//Get user by id without authentication
+exports.getByUserId = function(request, response) {
+    if(!request.params.user_id) {
+        response.status(400);
+        response.json({
+            status: 400,
+            message: "Bad Request"
+        });
+        return response;
+    }
+
+    const handleResponse = (userResponse) => {
+        if(userResponse != null ) {
+            response.json(getUseryUserId(userResponse));
+            return response;
+        } else{
+            response.status(400);
+            response.json({
+                status: 400,
+                message: "Bad Request"
+            });
+        }
+    };
+
+    let getUseryUserId = function (user) {
+        let apiResponse = {
+            id: user.id,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            username: user.username,
+            account_created: user.account_created,
+            account_updated: user.account_updated
+        };
+        return apiResponse;
+    };
+
+    userService.findUserByUserId(request.params.user_id)
+        .then(handleResponse)
+        .catch(handleDbError(response));
+};
