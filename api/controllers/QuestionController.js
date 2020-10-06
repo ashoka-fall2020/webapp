@@ -39,22 +39,16 @@ exports.createQuestion = function (request, response) {
                });
                return response;
            }else{
-               let message = catService.insertNonExistCategory(filterCats);
-               console.log(message);
-               if(message === "success") {
-                   response.status(200);
-                   response.json({
-                       status: 200,
-                       message: "OK"
-                   });
-                   return response;
-               } else{
-                   response.json({
-                       status: 500,
-                       message: "Error"
-                   });
-                   return response;
-               }
+               catService.insertNonExistCategory(filterCats)
+                .then(x => {
+                    console.log("Rows affected: ", x)
+                    response.status(200);
+                    response.json({
+                        status: 200,
+                        message: "OK"
+                    });
+                    return response;
+                });
            }
         }
     };

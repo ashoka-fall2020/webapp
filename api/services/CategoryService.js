@@ -36,14 +36,7 @@ exports.insertNonExistCategory = function (categories) {
     let prefix = "INSERT INTO `categories` VALUES ";
     console.log(values);
     let query = prefix + values;
-    db.sequelize.query(query, function(err) {
-        if(err){
-            console.log("blah 1");
-        } else{
-            console.log("blah 2");
-            return "success";
-        }
-    });
+    return db.sequelize.query(query, () => "will this shit print ?");
 };
 
 
