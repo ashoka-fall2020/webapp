@@ -10,5 +10,7 @@ module.exports = app => {
         .put(user.update);
 
     app.route('/v1/question/')
-        .post(question.createQuestion);
+       // .post(question.createQuestion);
+        .post(question.addQuestion);
+
 };
