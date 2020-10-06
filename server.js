@@ -15,6 +15,7 @@ function main () {
 
     // parse requests of content-type - application/json
     app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded());
     app.use (function (error, request, response, next){
         //Catch json error
         return response.json({
@@ -26,7 +27,13 @@ function main () {
     let routes = require('./api/routes/Routes');
     routes(app); //register the route
 
-    db.sequelize.sync();
+   //db.sequelize.sync();
+
+
+
+     db.sequelize.sync({ force: true }).then(() => {
+        console.log("Drop and re-sync db.");
+    });
 }
 main();
 

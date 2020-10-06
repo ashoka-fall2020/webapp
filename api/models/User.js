@@ -31,4 +31,5 @@ module.exports = (sequelize, Sequelize) => {
         }
     }, { indexes: [{name: 'username', unique: true, fields: ['username']}]});
     return User;
+
 };
