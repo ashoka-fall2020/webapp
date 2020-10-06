@@ -21,15 +21,10 @@ module.exports = (sequelize, Sequelize) => {
             allowNull: false,
             unique: true
         },
-        account_created: {
-            type: Sequelize.STRING,
-            field: "createdAt"
-        },
-        account_updated: {
-            type: Sequelize.STRING,
-            field: "updatedAt"
-        }
-    }, { indexes: [{name: 'username', unique: true, fields: ['username']}]});
+    }, { indexes: [{name: 'username', unique: true, fields: ['username']}],
+        createdAt: "account_created",
+        updatedAt: "account_updated"
+    });
     return User;
 
 };

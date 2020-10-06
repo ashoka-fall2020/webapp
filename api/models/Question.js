@@ -8,14 +8,6 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING,
             allowNull: false
         },
-        created_at: {
-            type: Sequelize.STRING,
-            field: "createdAt"
-        },
-        updated_at: {
-            type: Sequelize.STRING,
-            field: "updatedAt"
-        },
         user_id: {
             type: Sequelize.STRING.BINARY,
             references: {
@@ -23,6 +15,9 @@ module.exports = (sequelize, Sequelize) => {
                 key: 'id'
             }
         }
+    }, {
+        createdAt: "created_at",
+        updatedAt: "updated_at"
     });
     return Question;
 };

@@ -4,17 +4,9 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING.BINARY,
             primaryKey: true,
         },
-        question_text: {
+        answer_text: {
             type: Sequelize.STRING,
             allowNull: false
-        },
-        created_timestamp: {
-            type: Sequelize.STRING,
-            field: "createdAt"
-        },
-        updated_timestamp: {
-            type: Sequelize.STRING,
-            field: "updatedAt"
         },
         user_id: {
             type: Sequelize.STRING.BINARY,
@@ -30,6 +22,9 @@ module.exports = (sequelize, Sequelize) => {
                 key: 'question_id'
             }
         }
+    } , {
+        createdAt: "created_timestamp",
+        updatedAt: "updated_timestamp"
     });
     return Answer;
 

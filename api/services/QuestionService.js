@@ -108,7 +108,7 @@ exports.updateQuestion = function(question) {
 };
 
 exports.deleteQuestion = function(question_id) {
-    const promise = Question.delete({
+    const promise = Question.destroy({
         where:{question_id: question_id}
     });
     return promise;

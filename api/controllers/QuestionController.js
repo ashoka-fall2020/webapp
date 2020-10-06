@@ -268,10 +268,10 @@ exports.deleteQuestion = function (request, response) {
         return response;
     }
 
-    const handleGetQuestionResponse = (dbQuestion) => {
+    const handleGetSingleQuestionResponse = (dbQuestion) => {
         if (dbQuestion != null) {
             if(dbQuestion.user_id === updateQuestion.user_id) {
-
+                // if more than one answer can't delete
             } else{
                 response.status(401);
                 response.json({
@@ -303,7 +303,7 @@ exports.deleteQuestion = function (request, response) {
                 if(userResponse != null && bcrypt.compareSync(userCredentials.pass, userResponse.password)) {
                     //fetch question and validate if it is the user's
                     questionService.findQuestionById(request.params.question_id)
-                        .then(handleGetQuestionResponse)
+                        .then(handleGetSingleQuestionResponse)
                         .catch(handleDbError(response));
                 } else{
                     console.log("iam here");
@@ -317,5 +317,4 @@ exports.deleteQuestion = function (request, response) {
             })
             .catch(handleDbError(response));
     };
-
 };
