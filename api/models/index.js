@@ -11,11 +11,23 @@ const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
         acquire: dbConfig.pool.acquire,
         idle: dbConfig.pool.idle
     },
-    logging: false
+    logging: true
 });
 
 const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
-db.user = require("./UserModel.js")(sequelize, Sequelize);
+db.user = require("./User.js")(sequelize, Sequelize);
+db.question = require("./Question.js")(sequelize, Sequelize);
+db.answer = require("./Answer.js")(sequelize, Sequelize);
+db.categories = require("./Category.js")(sequelize, Sequelize);
+//db.question_category = require("./Question_Category")(sequelize, Sequelize);
+
+
+db.question.belongsToMany(db.categories, { through: 'Question_Category' , as: 'categories', foreignKey: 'category_id'});
+db.categories.belongsToMany(db.question, { through: 'Question_Category', as: 'questions', foreignKey: 'question_id' });
+
+
+
+
 module.exports = db;

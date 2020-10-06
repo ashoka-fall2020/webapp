@@ -27,6 +27,12 @@ function main () {
     routes(app); //register the route
 
     db.sequelize.sync();
+
+
+
+    // db.sequelize.sync({ force: true }).then(() => {
+    //     console.log("Drop and re-sync db.");
+    // });
 }
 main();
 
