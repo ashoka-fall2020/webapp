@@ -10,101 +10,6 @@ const bcrypt = require("bcrypt");
 
 
 
-// exports.createQuestion = function (request, response) {
-//     let question_id = "";
-// // Validate Question Request
-//
-//     if(request.body.question_text === null || request.body.question_text.length === 0) {
-//         console.log("error creating question");
-//         response.json({
-//             status: 400,
-//             message: "Bad request: Question text cannot be empty"
-//         });
-//     }
-//
-//     const question = {
-//         question_id: uuidv4(),
-//         question_text: request.body.question_text,
-//         user_id: ""
-//     };
-//
-//     const handleFindAllCats = (allCatRes) => {
-//         console.log(" Find All cats" + allCatRes);
-//         if (allCatRes != null) {
-//            let filterCats =  catService.filterCategories(allCatRes, request.body.categories);
-//            if(filterCats.length === 0) {
-//                catService.addAllQuestionCategoryIds(request.body.categories, question_id)
-//                    .then(() => {
-//                        response.status(200);
-//                        response.json({
-//                            status: 200,
-//                            message: "OK"
-//                        })
-//                        return response;
-//                    })
-//                    .catch(handleDbError(response));
-//            }else{
-//                catService.insertNonExistCategory(filterCats)
-//                 .then(() => {
-//                     catService.addAllQuestionCategoryIds(request.body.categories, question_id);
-//                     response.status(200);
-//                     response.json({
-//                         status: 200,
-//                         message: "OK"
-//                     })
-//                     return response;
-//                 });
-//            }
-//         }
-//     };
-//
-//     const handleCreateQuestionResponse = (successResponse) => {
-//         if (successResponse != null) {
-//             console.log("^^^success creating question", successResponse);
-//             question_id = successResponse.question_id;
-//             if(!request.body.categories || request.body.categories.length === 0) {
-//                 response.status(200);
-//                 response.json(successResponse);
-//                 return response;
-//             }
-//             console.log("findCats");
-//             catService.findAll()
-//                 .then(handleFindAllCats)
-//                 .catch(handleDbError(response));
-//         } else {
-//             console.log("error creating question");
-//             response.json({
-//                 status: 500,
-//                 message: "Server error: Error in creating user account"
-//             });
-//             return response;
-//         }
-//     };
-//
-//     const handleFindByUserNameResponse = (userResponse) => {
-//         if(userResponse != null && bcrypt.compareSync(credentials.pass, userResponse.password)) {
-//             question.user_id = userResponse.id;
-//             console.log("*****", request.body.categories);
-//             questionService.addQuestion(question)
-//                 .then(handleCreateQuestionResponse)
-//                 .catch(handleDbError(response));
-//         } else{
-//             setAccessDeniedResponse(userResponse);
-//             return userResponse;
-//         }
-//     };
-//
-//     let credentials = auth(request);
-//     if(credentials === undefined) {
-//         setAccessDeniedResponse(response);
-//         return response;
-//     } else {
-//         userService.findUserByUserName(credentials.name)
-//             .then(handleFindByUserNameResponse)
-//             .catch(handleDbError(response));
-//     }
-// };
-//
 const handleDbError = (response) => {
     const errorCallBack = (error) => {
         if (error) {
@@ -152,21 +57,15 @@ exports.addQuestion = function (request, response) {
                     question.categories = request.body.categories;
                     questionService.addQuestion_(question)
                         .then((successResponse) => {
-                            let questionPayload = questionService.get(question.question_id);
-                            let prom = questionPayload._promise;
-                            let _question = questionPayload._question;
-                            let out = {};
-                            prom.then((object) => {
-                                    out.question_id = _question.question_id;
-                                    out.created_timestamp = _question.createdAt;
-                                    out.updated_timestamp = _question.updatedAt;
-                                    out.user_id = _question.user_id;
-                                    out.question_text = _question.question_text;
-                                    out.categories = object;
-                                    response.status(200);
-                                    response.write(JSON.stringify(out));
-                            }).catch(() => console.log("in map's catch"));
-                            return response;
+                            // userService
+
+
+                            console.log("Success adding question" + successResponse);
+                            let out = questionService.get(question.question_id);
+                            console.log("test");
+                            console.log("out in controller", out);
+                            response.status(200);
+                            response.json(out);
                         })
                         .catch(handleDbError(response));
                 } else{
@@ -192,7 +91,7 @@ exports.updateQuestion = function (request, response) {
         });
         return;
     }
-    if(!request.params.question_id || request.params.question_id === null) {
+    if(!request.params.question_id) {
         response.status(400);
         response.json({
             status: 400,
@@ -204,13 +103,47 @@ exports.updateQuestion = function (request, response) {
         question_id: request.params.question_id,
         question_text: request.body.question_text,
         user_id: "",
-        categories: []
+        categories: request.body.categories
+    };
+
+    const updateResponse = (upRes) => {
+        if(upRes != null) {
+            response.status(201);
+            response.json({
+                status: 201,
+                message: "Update successfull"
+            });
+        } else{
+            response.status(404);
+            response.json({
+                status: 404,
+                message: "Not found"
+            });
+        }
+    };
+
+    const updateQuestionCategories = (updatedQuestion) => {
+        if (updatedQuestion != null) {
+            questionService.updateQuestionCategories(updateQuestion, request.body.categories)
+                .then(updateResponse)
+                .catch(handleDbError(response));
+
+        } else {
+            response.status(404);
+            response.json({
+                status: 404,
+                message: "Not found"
+            });
+        }
     };
 
     const handleQuestionResponse = (dbQuestion) => {
         if (dbQuestion != null) {
            if(dbQuestion.user_id === updateQuestion.user_id) {
-
+                //update question_text and categories
+               questionService.updateQuestion(updateQuestion)
+                   .then(updateQuestionCategories)
+                   .catch(handleDbError(response));
            } else{
                response.status(401);
                response.json({
@@ -220,7 +153,7 @@ exports.updateQuestion = function (request, response) {
                return response;
            }
         } else {
-            response.status(400);
+            response.status(404);
             response.json({
                 status: 404,
                 message: "Not found"
@@ -241,6 +174,7 @@ exports.updateQuestion = function (request, response) {
             .then((userResponse) => {
                 if(userResponse != null && bcrypt.compareSync(userCredentials.pass, userResponse.password)) {
                     //fetch question and validate if it is the user's
+                    updateQuestion.user_id = userResponse.id;
                     questionService.findQuestionById(updateQuestion.question_id)
                         .then(handleQuestionResponse)
                         .catch(handleDbError(response));
@@ -272,6 +206,7 @@ exports.deleteQuestion = function (request, response) {
         if (dbQuestion != null) {
             if(dbQuestion.user_id === updateQuestion.user_id) {
                 // if more than one answer can't delete
+
             } else{
                 response.status(401);
                 response.json({
@@ -281,7 +216,7 @@ exports.deleteQuestion = function (request, response) {
                 return response;
             }
         } else {
-            response.status(400);
+            response.status(404);
             response.json({
                 status: 404,
                 message: "Not found"
@@ -317,4 +252,8 @@ exports.deleteQuestion = function (request, response) {
             })
             .catch(handleDbError(response));
     };
+};
+
+exports.getQuestionById = function (request, response) {
+
 };

@@ -2,6 +2,7 @@
 const db = require("../models");
 const Question = db.question;
 const Category = db.categories;
+const Question_Category = db.question_category;
 const {v4: uuidv4} = require("uuid");
 
 exports.addQuestion = function (question) {
@@ -15,20 +16,20 @@ exports.addQuestion_ = function (question) {
         if (!categories || categories.length === 0) {
             return;
         }
-        categories = categories.map(category =>category.category);
+        let categoryNames = categories.map(category =>category.category);
         console.log("inside findAllQuestionCategoryIds", categories);
-        db.sequelize.query('SELECT category_id FROM categories WHERE category in (?)',
-            { replacements: [categories], type: db.sequelize.QueryTypes.SELECT }
+        db.sequelize.query('SELECT category_id, category FROM categories WHERE category in (?)',
+            { replacements: [categoryNames], type: db.sequelize.QueryTypes.SELECT }
         ).then(function(categories) {
-            let categoryIds = categories.map(cat => cat.category_id);
             let values = "";
-            categoryIds.forEach(cat => {
+            categories.forEach(cat => {
                 values += "(" + "'" + questionId + "'" + "," + " ";
-                values += "'" + cat + "'" + ")";
+                values += "'" + cat.category_id+ "'" + "," + " ";
+                values += "'" + cat.category + "'" + ")";
                 values += ",";
             });
             values = values.substr(0, values.length-1);
-            let prefix = "INSERT INTO `question_categories` (question_id, category_id) VALUES ";
+            let prefix = "INSERT INTO `question_categories` (question_id, category_id, category) VALUES ";
             console.log(values);
             let query = prefix + values;
             return db.sequelize.query(query, () => "Adding values to question_category table!");
@@ -71,22 +72,48 @@ exports.addQuestion_ = function (question) {
     };
 
 exports.get = function (id) {
-    let getQuestionById = function (id) {
-            return Question.findOne({
-                where: {question_id: id}
-            });
-    };
-
-    let handleQuestion = function(question) {
-        console.log("***question", question);
-        return db.sequelize.query("select cat.category_id, cat.category from `categories` cat inner join `question_categories` " +
-            "qcat on cat.category_id = qcat.category_id where qcat.question_id = " + "'" + question.question_id + "'",
-            { replacements: [], type: db.sequelize.QueryTypes.SELECT });
-    };
-
-    getQuestionById(id).then(questionDb => {
-        return  {_question: questionDb, _promise: handleQuestion(questionDb)};
-    }).catch(() => {});
+    // let out = {};
+    // let getQuestionById = function (id) {
+    //     return Question.findOne({
+    //         where: {question_id: id}
+    //     });
+    // };
+    // let handleQuestion = function(question) {
+    //     return db.sequelize.query("select cat.category_id, cat.category from `categories` cat inner join `question_categories` " +
+    //         "qcat on cat.category_id = qcat.category_id where qcat.question_id = " + "'" + question.question_id + "'",
+    //         { replacements: [], type: db.sequelize.QueryTypes.SELECT });
+    // };
+    //
+    // getQuestionById(id).then(questionDb => {
+    //     const res = handleQuestion(questionDb).then( obj => {
+    //         out.question_id = questionDb.question_id;
+    //         out.created_timestamp = questionDb.created_at;
+    //         out.updated_timestamp = questionDb.updated_at;
+    //         out.user_id = questionDb.user_id;
+    //         out.question_text = questionDb.question_text;
+    //         out.categories = obj;
+    //         console.log("out out ", out);
+    //         return res;
+    //
+    //     })});
+    let q = {};
+    Question.findOne({
+        where: {question_id: id}
+            })
+        .then(question => {q=question; db.sequelize.query("select cat.category_id, cat.category from `categories` cat inner join `question_categories` " +
+                "qcat on cat.category_id = qcat.category_id where qcat.question_id = " + "'" + question.question_id + "'",
+                { replacements: [], type: db.sequelize.QueryTypes.SELECT })})
+        .then(obj => {
+                    let out = {};
+                    out.question_id = q.question_id;
+                    out.created_timestamp = q.created_at;
+                    out.updated_timestamp = q.updated_at;
+                    out.user_id = q.user_id;
+                    out.question_text = q.question_text;
+                    out.categories = obj;
+                    console.log("out out ", out);
+                    return out;
+                })
 };
 
 // This is for just fetching question without any categories
@@ -107,8 +134,73 @@ exports.updateQuestion = function(question) {
     return promise;
 };
 
+exports.updateQuestionCategories = async function (question, categories) {
+    console.log("question", question);
+    if (categories.length === 0) {
+        //delete all existing categories of question from question category
+        await Question_Category.destroy({
+            where:{question_id: question.question_id}
+        })
+    } else{
+        let allCatRes = await Category.findAll({
+            raw: true
+        });
+        let incomingCats = categories.map(cat => cat.category);
+        let allCategoryNames = allCatRes.map(cat => cat.category);
+        let filterCats = incomingCats.filter(e => !allCategoryNames.includes(e));
+        //cats to be added
+        if(filterCats.length !== 0) {
+            let records = [];
+            filterCats.map(cat => {
+                records.push({
+                    category_id: uuidv4(),
+                    category: cat
+                });
+            });
+            let addToCats = await Category.bulkCreate(records);
+        }
+        if(allCatRes.length !== 0) {
+            let catsToBeRemoved = allCatRes.filter(cat => !incomingCats.includes(cat.category)).map(cat => cat.category_id);
+            await Question_Category.destroy({
+                where:{category_id: catsToBeRemoved}
+            })
+        }
+        // Add new entries to QC table
+        console.log("question", question);
+        let allQC = await Question_Category.findAll({
+            where:{question_id: question.question_id},
+            raw: true
+        });
+        allQC = allQC.map(e => e.category);
+        let filterQC = allCategoryNames.filter(e => !allQC.includes(e));
+        console.log("AllCats ", allQC);
+        console.log("FilterCats ", filterQC);
+        console.log("incomingCats", incomingCats);
+        let records = [];
+        let categoriesToBeInserted = await Category.findAll({
+            where:{category: filterQC}
+        })
+        categoriesToBeInserted.map(cat => {
+            records.push({
+                question_id: question.question_id,
+                category_id: cat.category_id,
+                category: cat.category
+            });
+        });
+        let addToCats = await Question_Category.bulkCreate(records);
+        return addToCats;
+    }
+};
+
 exports.deleteQuestion = function(question_id) {
     const promise = Question.destroy({
+        where:{question_id: question_id}
+    });
+    return promise;
+};
+
+exports.getQuestionByID = function (question_id) {
+    const promise = Question.get({
         where:{question_id: question_id}
     });
     return promise;

@@ -9,6 +9,11 @@ module.exports = (sequelize, Sequelize) => {
         category_id: {
             type: Sequelize.STRING.BINARY,
             primaryKey: true,
+        },
+        category: {
+            type: Sequelize.STRING,
+            allowNull: false
         }
     }, { timestamps: false });
+    return question_category;
 };
