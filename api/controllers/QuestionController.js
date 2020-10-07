@@ -118,7 +118,7 @@ exports.updateQuestion = function (request, response) {
             response.status(201);
             response.json({
                 status: 201,
-                message: "Update successfull"
+                message: "Update successful"
             });
         } else{
             response.status(404);
@@ -131,10 +131,17 @@ exports.updateQuestion = function (request, response) {
 
     const updateQuestionCategories = (updatedQuestion) => {
         if (updatedQuestion != null) {
-            questionService.updateQuestionCategories(updateQuestion, request.body.categories)
-                .then(updateResponse)
-                .catch(handleDbError(response));
-
+            if(request.body.categories !== undefined) {
+                questionService.updateQuestionCategories(updateQuestion, request.body.categories)
+                    .then(updateResponse)
+                    .catch(handleDbError(response));
+            } else{
+                response.status(200);
+                response.json({
+                    status: 200,
+                    message: "Update success"
+                });
+            }
         } else {
             response.status(404);
             response.json({
@@ -329,6 +336,7 @@ exports.getQuestionById = function (request, response) {
 exports.getQuestions = function (request, response) {
     const questionsRes = (questionRes) => {
         if(questionRes !== null) {
+            console.log("res", questionRes);
             response.status(200);
             response.json(questionRes);
             return response;
