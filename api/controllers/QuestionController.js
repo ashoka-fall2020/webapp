@@ -291,5 +291,31 @@ exports.deleteQuestion = function (request, response) {
 };
 
 exports.getQuestionById = function (request, response) {
+    if(!request.params.question_id) {
+        response.status(400);
+        response.json({
+            status: 400,
+            message: "Bad Request"
+        });
+        return response;
+    }
 
+    const getResponse = (questionRes) => {
+        if(questionRes !== null) {
+            response.status(200);
+            response.json(questionRes);
+            return response;
+        } else{
+            response.status(400);
+            response.json({
+                status: 400,
+                message: "Bad Request"
+            });
+            return response;
+        }
+    };
+
+    questionService.getQuestion(request.params.question_id)
+        .then(getResponse)
+        .catch(handleDbError(response));
 };

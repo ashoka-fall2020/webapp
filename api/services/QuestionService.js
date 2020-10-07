@@ -2,6 +2,7 @@
 const db = require("../models");
 const Question = db.question;
 const Category = db.categories;
+const Answer = db.answer;
 const Question_Category = db.question_category;
 const {v4: uuidv4} = require("uuid");
 
@@ -208,3 +209,33 @@ exports.getQuestionByID = function (question_id) {
     });
     return promise;
 };
+
+exports.getQuestion = async function (question_id) {
+    let out = {};
+    let question = await Question.findOne({
+        where:{question_id: question_id}
+    });
+    let questionCategories = await Question_Category.findAll({
+        where:{question_id: question_id}
+    });
+    if(questionCategories.length > 0) {
+        questionCategories = questionCategories.map(e => e.category_id);
+    }
+     let categories = await Category.findAll({
+        where:{category_id: questionCategories}
+    });
+    question.categories = categories;
+    let answers = await Answer.findAll({
+        where:{question_id: question_id}
+    });
+    question.answers = answers;
+    out.question_id = question.question_id;
+    out.created_timestamp = question.created_timestamp;
+    out.updated_timestamp = question.updated_timestamp;
+    out.user_id = question.user_id;
+    out.question_text = question.question_text;
+    out.categories = categories;
+    out.answers = answers;
+    return out;
+};
+
