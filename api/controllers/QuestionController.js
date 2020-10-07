@@ -113,28 +113,16 @@ exports.updateQuestion = function (request, response) {
         categories: request.body.categories
     };
 
-    const updateResponse = (upRes) => {
-        if(upRes != null) {
-            response.status(201);
-            response.json({
-                status: 201,
-                message: "Update successful"
-            });
-        } else{
-            response.status(404);
-            response.json({
-                status: 404,
-                message: "Not found"
-            });
-        }
-    };
-
     const updateQuestionCategories = (updatedQuestion) => {
         if (updatedQuestion != null) {
             if(request.body.categories !== undefined) {
                 questionService.updateQuestionCategories(updateQuestion, request.body.categories)
-                    .then(updateResponse)
-                    .catch(handleDbError(response));
+                response.status(200);
+                response.json({
+                    status: 200,
+                    message: "Update success"
+                });
+                return response;
             } else{
                 response.status(200);
                 response.json({
