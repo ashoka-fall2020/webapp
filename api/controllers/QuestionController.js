@@ -1,5 +1,6 @@
 const questionService = require("../services/QuestionService");
 const userService = require("../services/UserService");
+const answerService = require("../services/AnswerService");
 const db = require("../models");
 const Question = db.question;
 const Category =  db.categories;
@@ -202,11 +203,46 @@ exports.deleteQuestion = function (request, response) {
         return response;
     }
 
+    const deleteQResponse = (deleteRes) => {
+        if(deleteRes != null) {
+            response.status(204);
+            response.json({
+                status: 204,
+                message: "Success"
+            });
+            return response;
+        } else{
+            response.status(404);
+            response.json({
+                status: 404,
+                message: "Not found"
+            });
+            return response;
+        }
+    };
+    const allAnswerResponse = (answers) => {
+        if(answers !== undefined && answers.length === 0) {
+            questionService.deleteQuestion(request.params.question_id)
+                .then(deleteQResponse)
+                .catch(handleDbError(response));
+        }else{
+            response.status(401);
+            response.json({
+                status: 401,
+                message: "Access Denied: Authentication error"
+            });
+            return response;
+        }
+    };
+
+    let userId = "";
     const handleGetSingleQuestionResponse = (dbQuestion) => {
         if (dbQuestion != null) {
-            if(dbQuestion.user_id === updateQuestion.user_id) {
+            if(dbQuestion.user_id === userId) {
                 // if more than one answer can't delete
-
+                answerService.findAnswerByQuestionId(request.params.question_id)
+                    .then(allAnswerResponse)
+                    .catch(handleDbError(response));
             } else{
                 response.status(401);
                 response.json({
@@ -237,11 +273,11 @@ exports.deleteQuestion = function (request, response) {
             .then((userResponse) => {
                 if(userResponse != null && bcrypt.compareSync(userCredentials.pass, userResponse.password)) {
                     //fetch question and validate if it is the user's
+                    userId = userResponse.id;
                     questionService.findQuestionById(request.params.question_id)
                         .then(handleGetSingleQuestionResponse)
                         .catch(handleDbError(response));
                 } else{
-                    console.log("iam here");
                     response.status(401);
                     response.json({
                         status: 401,

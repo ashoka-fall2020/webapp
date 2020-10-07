@@ -192,7 +192,10 @@ exports.updateQuestionCategories = async function (question, categories) {
     }
 };
 
-exports.deleteQuestion = function(question_id) {
+exports.deleteQuestion = async function(question_id) {
+    await Question_Category.destroy({
+        where:{question_id: question_id}
+    });
     const promise = Question.destroy({
         where:{question_id: question_id}
     });
