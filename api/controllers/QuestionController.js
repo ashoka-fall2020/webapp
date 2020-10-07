@@ -325,3 +325,23 @@ exports.getQuestionById = function (request, response) {
         .then(getResponse)
         .catch(handleDbError(response));
 };
+
+exports.getQuestions = function (request, response) {
+    const questionsRes = (questionRes) => {
+        if(questionRes !== null) {
+            response.status(200);
+            response.json(questionRes);
+            return response;
+        } else{
+            response.status(400);
+            response.json({
+                status: 400,
+                message: "Bad Request"
+            });
+            return response;
+        }
+    };
+    questionService.getQuestions()
+        .then(questionsRes)
+        .catch(handleDbError(response));
+};

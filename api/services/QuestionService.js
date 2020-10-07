@@ -13,9 +13,16 @@ exports.addQuestion = async function (question) {
     let allCatRes = await Category.findAll({
         attributes: ["category"], raw: true
     });
-    let incomingCats = question.categories.map(cat => cat.category);
-    let filterCats = incomingCats.filter(e => !allCatRes.includes(e));
-    console.log("filter cats: ", filterCats);
+    let incomingCats = question.categories.map(cat => cat.category);;
+    let allCategories = [];
+    let filterCats = [];
+    if(allCatRes.length !== 0) {
+        allCategories  =  allCatRes.map(cat => cat.category);
+        filterCats = incomingCats.filter(e => !allCategories.includes(e));
+    }
+    else{
+        filterCats = incomingCats;
+    }
     if(filterCats.length !== 0) {
         let records = [];
         filterCats.map(cat => {
@@ -164,3 +171,10 @@ exports.getQuestion = async function (question_id) {
     return out;
 };
 
+exports.getQuestions = async function () {
+
+    let questions = await Question.findAll({
+
+    });
+    return questions;
+};

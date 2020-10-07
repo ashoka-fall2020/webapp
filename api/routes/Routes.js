@@ -20,6 +20,8 @@ module.exports = app => {
         .delete(question.deleteQuestion);
     app.route('/v1/question/:question_id')
         .get(question.getQuestionById);
+    app.route('/v1/questions')
+        .get(question.getQuestions);
 
     app.route('/v1/question/:question_id/answer')
         .post(answer.addAnswer);
