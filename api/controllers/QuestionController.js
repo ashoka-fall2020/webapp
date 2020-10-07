@@ -56,17 +56,23 @@ exports.addQuestion = function (request, response) {
                 if(userResponse != null && bcrypt.compareSync(credentials.pass, userResponse.password)) {
                     question.user_id = userResponse.id;
                     question.categories = request.body.categories;
-                    questionService.addQuestion_(question)
+                    questionService.addQuestion(question)
                         .then((successResponse) => {
-                            // userService
+                            if(successResponse !== null) {
+                                response.status(200);
+                                response.json(successResponse);
+                                return response;
+                            }
+                            else{
+                                console.log("iam here");
+                                response.status(400);
+                                response.json({
+                                    status: 400,
+                                    message: "Resource not found"
+                                });
+                                return response;
+                            }
 
-
-                            console.log("Success adding question" + successResponse);
-                            let out = questionService.get(question.question_id);
-                            console.log("test");
-                            console.log("out in controller", out);
-                            response.status(200);
-                            response.json(out);
                         })
                         .catch(handleDbError(response));
                 } else{
