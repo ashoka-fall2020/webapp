@@ -27,5 +27,4 @@ module.exports = (sequelize, Sequelize) => {
         updatedAt: "updated_timestamp"
     });
     return Answer;
-
 };

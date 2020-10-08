@@ -1,7 +1,6 @@
 const questionService = require("../services/QuestionService");
 const userService = require("../services/UserService");
 const answerService = require("../services/AnswerService");
-const db = require("../models");
 
 const {v4: uuidv4} = require("uuid");
 const auth = require('basic-auth');
@@ -21,9 +20,7 @@ const handleDbError = (response) => {
 };
 
 exports.addQuestion = function (request, response) {
-    console.log("request.body.question_text", request.body.question_text);
     if(request.body.question_text === null || request.body.question_text === undefined || request.body.categories === undefined || request.body.question_text.length === 0) {
-        console.log("error creating question");
         response.status(400);
         response.json({
             status: 400,
@@ -48,7 +45,21 @@ exports.addQuestion = function (request, response) {
         });
         return response;
     } else {
-        console.log("categories", request.body.categories);
+        let returnEarly = false;
+        request.body.categories.forEach(cat => {
+            if(cat === undefined || cat === null || cat.category === null || cat.category.length === 0) {
+                returnEarly = true;
+                response.status(400);
+                response.json({
+                    status: 400,
+                    message: "Category cannot be empty"
+                });
+            }
+        });
+        if (returnEarly)
+        {
+            return response;
+        }
         request.body.categories.forEach(cat => cat.category = cat.category.toLowerCase());
         userService.findUserByUserName(credentials.name)
             .then((userResponse) => {
@@ -63,7 +74,6 @@ exports.addQuestion = function (request, response) {
                                 return response;
                             }
                             else{
-                                console.log("iam here");
                                 response.status(400);
                                 response.json({
                                     status: 400,
@@ -75,7 +85,6 @@ exports.addQuestion = function (request, response) {
                         })
                         .catch(handleDbError(response));
                 } else{
-                    console.log("iam here");
                     response.status(401);
                     response.json({
                         status: 401,
@@ -90,7 +99,6 @@ exports.addQuestion = function (request, response) {
 
 exports.updateQuestion = function (request, response) {
     if(request.body.question_text === null || request.body.question_text === undefined || request.body.categories === undefined || request.body.question_text.length === 0) {
-        console.log("error updating question");
         response.status(400);
         response.json({
             status: 400,
@@ -113,17 +121,32 @@ exports.updateQuestion = function (request, response) {
         categories: request.body.categories
     };
 
+    const updateCatResponse = (updateResponse) => {
+        response.status(204);
+        response.json({
+            status: 204,
+            message: "Update success"
+        });
+        return response;
+    };
+
     const updateQuestionCategories = (updatedQuestion) => {
         if (updatedQuestion != null) {
             if(request.body.categories !== undefined) {
+                request.body.categories.forEach(cat => {
+                    if(cat === undefined || cat === null || cat.category === null || cat.category.length === 0) {
+                        response.status(400);
+                        response.json({
+                            status: 400,
+                            message: "Category cannot be empty"
+                        });
+                        return response;
+                    }
+                });
                 request.body.categories.forEach(cat => cat.category = cat.category.toLowerCase());
                 questionService.updateQuestionCategories(updateQuestion, request.body.categories)
-                response.status(204);
-                response.json({
-                    status: 204,
-                    message: "Update success"
-                });
-                return response;
+                    .then(updateCatResponse)
+                    .catch(handleDbError(response));
             } else{
                 response.status(204);
                 response.json({
@@ -161,7 +184,7 @@ exports.updateQuestion = function (request, response) {
             response.status(404);
             response.json({
                 status: 404,
-                message: "Not found"
+                message: "Question not found"
             });
             return response;
         }
@@ -184,7 +207,6 @@ exports.updateQuestion = function (request, response) {
                         .then(handleQuestionResponse)
                         .catch(handleDbError(response));
                 } else{
-                    console.log("iam here");
                     response.status(401);
                     response.json({
                         status: 401,
@@ -194,7 +216,7 @@ exports.updateQuestion = function (request, response) {
                 }
             })
             .catch(handleDbError(response));
-    };
+    }
 };
 
 exports.deleteQuestion = function (request, response) {
@@ -291,7 +313,7 @@ exports.deleteQuestion = function (request, response) {
                 }
             })
             .catch(handleDbError(response));
-    };
+    }
 };
 
 exports.getQuestionById = function (request, response) {
@@ -333,7 +355,7 @@ exports.getQuestionById = function (request, response) {
             return response;
         }
     };
-    questionService.getQuestionByID(request.params.question_id)
+    questionService.findQuestionById(request.params.question_id)
         .then(questionExistResponse)
         .catch(handleDbError(response));
 
@@ -342,7 +364,6 @@ exports.getQuestionById = function (request, response) {
 exports.getQuestions = function (request, response) {
     const questionsRes = (questionRes) => {
         if(questionRes !== null) {
-            console.log("res", questionRes);
             response.status(200);
             response.json(questionRes);
             return response;

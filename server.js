@@ -18,6 +18,7 @@ function main () {
     app.use(bodyParser.urlencoded());
     app.use (function (error, request, response, next){
         //Catch json error
+        response.status(400);
         return response.json({
             status: 400,
             message: "Bad request"
@@ -27,10 +28,7 @@ function main () {
     let routes = require('./api/routes/Routes');
     routes(app); //register the route
 
-   //db.sequelize.sync();
-
-
-
+    //db.sequelize.sync();
      db.sequelize.sync({ force: true }).then(() => {
         console.log("Drop and re-sync db.");
     });
