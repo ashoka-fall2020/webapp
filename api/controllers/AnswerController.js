@@ -10,10 +10,10 @@ const Answer = db.answer;
 const handleDbError = (response) => {
     const errorCallBack = (error) => {
         if (error) {
-            response.status(500);
+            response.status(400);
             response.json({
-                status: 500,
-                message: error.message
+                status: 400,
+                message: "Unable to perform operation"
             });
         }
     };
@@ -21,8 +21,8 @@ const handleDbError = (response) => {
 };
 
 exports.addAnswer = function (request, response) {
-    if(request.body.answer_text === null || request.body.answer_text.length === 0) {
-        console.log("error creating answer");
+    if(request.body.answer_text === null || request.body.answer_text === undefined || request.body.answer_text.length === 0 ) {
+        response.status(400);
         response.json({
             status: 400,
             message: "Bad request: Answer text cannot be empty"
@@ -45,9 +45,7 @@ exports.addAnswer = function (request, response) {
         question_id: request.params.question_id
     };
     const handleAnswerResponse = (answerResponse) => {
-        console.log("answer created");
         if(answerResponse != null) {
-            console.log("answer created");
             response.status(200);
             response.json(answerResponse);
             return response;
@@ -63,12 +61,10 @@ exports.addAnswer = function (request, response) {
 
     const handleQuestionResponse = (dbQuestion) => {
         if (dbQuestion != null) {
-            console.log("valid question id");
             answerService.createAnswer(answer)
                 .then(handleAnswerResponse)
                 .catch(handleDbError);
         } else {
-            console.log("invalid question");
             response.status(404);
             response.json({
                 status: 404,
@@ -89,13 +85,11 @@ exports.addAnswer = function (request, response) {
         userService.findUserByUserName(userCredentials.name)
             .then((userResponse) => {
                 if(userResponse != null && bcrypt.compareSync(userCredentials.pass, userResponse.password)) {
-                    console.log("user response: " + userResponse.id);
                     answer.user_id = userResponse.id;
                     questionService.findQuestionById(answer.question_id)
                         .then(handleQuestionResponse)
                         .catch(handleDbError(response));
                 } else{
-                    console.log("iam here");
                     response.status(401);
                     response.json({
                         status: 401,
@@ -125,8 +119,8 @@ exports.updateAnswer = function (request, response) {
         });
         return response;
     }
-    if(request.body.answer_text === null || request.body.answer_text.length === 0) {
-        console.log("error creating answer");
+    if(request.body.answer_text === null || request.body.answer_text === undefined|| request.body.answer_text.length === 0) {
+        response.status(400);
         response.json({
             status: 400,
             message: "Bad request: Answer text cannot be empty"
@@ -180,7 +174,6 @@ exports.updateAnswer = function (request, response) {
                                     return response;
                                 }
                             } else{
-                                console.log("iam here");
                                 response.status(401);
                                 response.json({
                                     status: 401,
@@ -192,10 +185,10 @@ exports.updateAnswer = function (request, response) {
                         .catch(handleDbError(response));
                 };
             } else{
-                response.status(401);
+                response.status(400);
                 response.json({
-                    status: 401,
-                    message: "Access denied: Answer does not belong to given question"
+                    status: 400,
+                    message: "Bad request: Answer does not belong to given question"
                 });
                 return response;
             }
@@ -212,6 +205,7 @@ exports.updateAnswer = function (request, response) {
         .then(getAnswerResponse)
         .catch(handleDbError(response));
 };
+
 
 
 exports.deleteAnswer = function (request, response) {
@@ -234,17 +228,17 @@ exports.deleteAnswer = function (request, response) {
 
     const handleDeleteResponse = (deleteAnswer) => {
         if(deleteAnswer != null) {
-            response.status(204);
+            response.status(200);
             response.json({
-                status: 204,
+                status: 200,
                 message: "Answer deleted successfully"
             });
             return response;
         } else {
-            response.status(400);
+            response.status(404);
             response.json({
-                status: 400,
-                message: "Error in deleting answer"
+                status: 404,
+                message: "Answer: Not found"
             });
             return response;
         }
@@ -278,7 +272,6 @@ exports.deleteAnswer = function (request, response) {
                                     return response;
                                 }
                             } else{
-                                console.log("iam here");
                                 response.status(401);
                                 response.json({
                                     status: 401,
@@ -298,7 +291,7 @@ exports.deleteAnswer = function (request, response) {
                 return response;
             }
         } else{
-            response.status(400);
+            response.status(404);
             response.json({
                 status: 404,
                 message: "Answer not found"

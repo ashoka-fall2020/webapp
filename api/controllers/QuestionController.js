@@ -1,23 +1,18 @@
 const questionService = require("../services/QuestionService");
 const userService = require("../services/UserService");
 const answerService = require("../services/AnswerService");
-const db = require("../models");
-const Question = db.question;
-const Category =  db.categories;
 
 const {v4: uuidv4} = require("uuid");
 const auth = require('basic-auth');
 const bcrypt = require("bcrypt");
 
-
-
 const handleDbError = (response) => {
     const errorCallBack = (error) => {
         if (error) {
-            response.status(500);
+            response.status(400);
             response.json({
-                status: 500,
-                message: error.message
+                status: 400,
+                message: "Unable to perform operation"
             });
         }
     };
@@ -25,14 +20,13 @@ const handleDbError = (response) => {
 };
 
 exports.addQuestion = function (request, response) {
-
-    if(request.body.question_text === null || request.body.question_text.length === 0) {
-        console.log("error creating question");
+    if(request.body.question_text === null || request.body.question_text === undefined || request.body.categories === undefined || request.body.question_text.length === 0) {
+        response.status(400);
         response.json({
             status: 400,
-            message: "Bad request: Question text cannot be empty"
+            message: "Bad request"
         });
-        return;
+        return response;
     }
 
     const question = {
@@ -51,6 +45,22 @@ exports.addQuestion = function (request, response) {
         });
         return response;
     } else {
+        let returnEarly = false;
+        request.body.categories.forEach(cat => {
+            if(cat === undefined || cat === null || cat.category === null || cat.category.length === 0) {
+                returnEarly = true;
+                response.status(400);
+                response.json({
+                    status: 400,
+                    message: "Category cannot be empty"
+                });
+            }
+        });
+        if (returnEarly)
+        {
+            return response;
+        }
+        request.body.categories.forEach(cat => cat.category = cat.category.toLowerCase());
         userService.findUserByUserName(credentials.name)
             .then((userResponse) => {
                 if(userResponse != null && bcrypt.compareSync(credentials.pass, userResponse.password)) {
@@ -64,7 +74,6 @@ exports.addQuestion = function (request, response) {
                                 return response;
                             }
                             else{
-                                console.log("iam here");
                                 response.status(400);
                                 response.json({
                                     status: 400,
@@ -76,7 +85,6 @@ exports.addQuestion = function (request, response) {
                         })
                         .catch(handleDbError(response));
                 } else{
-                    console.log("iam here");
                     response.status(401);
                     response.json({
                         status: 401,
@@ -90,13 +98,13 @@ exports.addQuestion = function (request, response) {
 };
 
 exports.updateQuestion = function (request, response) {
-    if(request.body.question_text === null || request.body.question_text.length === 0) {
-        console.log("error updating question");
+    if(request.body.question_text === null || request.body.question_text === undefined || request.body.categories === undefined || request.body.question_text.length === 0) {
+        response.status(400);
         response.json({
             status: 400,
-            message: "Bad request: Question text cannot be empty"
+            message: "Bad request"
         });
-        return;
+        return response;
     }
     if(!request.params.question_id) {
         response.status(400);
@@ -113,22 +121,39 @@ exports.updateQuestion = function (request, response) {
         categories: request.body.categories
     };
 
+    const updateCatResponse = (updateResponse) => {
+        response.status(204);
+        response.json({
+            status: 204,
+            message: "Update success"
+        });
+        return response;
+    };
+
     const updateQuestionCategories = (updatedQuestion) => {
         if (updatedQuestion != null) {
             if(request.body.categories !== undefined) {
-                questionService.updateQuestionCategories(updateQuestion, request.body.categories)
-                response.status(204);
-                response.json({
-                    status: 204,
-                    message: "Update success"
+                request.body.categories.forEach(cat => {
+                    if(cat === undefined || cat === null || cat.category === null || cat.category.length === 0) {
+                        response.status(400);
+                        response.json({
+                            status: 400,
+                            message: "Category cannot be empty"
+                        });
+                        return response;
+                    }
                 });
-                return response;
+                request.body.categories.forEach(cat => cat.category = cat.category.toLowerCase());
+                questionService.updateQuestionCategories(updateQuestion, request.body.categories)
+                    .then(updateCatResponse)
+                    .catch(handleDbError(response));
             } else{
                 response.status(204);
                 response.json({
                     status: 204,
                     message: "Update success"
                 });
+                return response;
             }
         } else {
             response.status(404);
@@ -136,6 +161,7 @@ exports.updateQuestion = function (request, response) {
                 status: 404,
                 message: "Question not found"
             });
+            return response;
         }
     };
 
@@ -158,7 +184,7 @@ exports.updateQuestion = function (request, response) {
             response.status(404);
             response.json({
                 status: 404,
-                message: "Not found"
+                message: "Question not found"
             });
             return response;
         }
@@ -181,7 +207,6 @@ exports.updateQuestion = function (request, response) {
                         .then(handleQuestionResponse)
                         .catch(handleDbError(response));
                 } else{
-                    console.log("iam here");
                     response.status(401);
                     response.json({
                         status: 401,
@@ -191,7 +216,7 @@ exports.updateQuestion = function (request, response) {
                 }
             })
             .catch(handleDbError(response));
-    };
+    }
 };
 
 exports.deleteQuestion = function (request, response) {
@@ -227,10 +252,10 @@ exports.deleteQuestion = function (request, response) {
                 .then(deleteQResponse)
                 .catch(handleDbError(response));
         }else{
-            response.status(401);
+            response.status(400);
             response.json({
-                status: 401,
-                message: "Access Denied: Authentication error"
+                status: 400,
+                message: "Unsupported operation: Questions with multiple answers cannot be deleted"
             });
             return response;
         }
@@ -288,7 +313,7 @@ exports.deleteQuestion = function (request, response) {
                 }
             })
             .catch(handleDbError(response));
-    };
+    }
 };
 
 exports.getQuestionById = function (request, response) {
@@ -316,15 +341,29 @@ exports.getQuestionById = function (request, response) {
         }
     };
 
-    questionService.getQuestion(request.params.question_id)
-        .then(getResponse)
+    const questionExistResponse = (questionRes) => {
+        if(questionRes !== null) {
+            questionService.getQuestion(request.params.question_id)
+                .then(getResponse)
+                .catch(handleDbError(response));
+        } else{
+            response.status(404);
+            response.json({
+                status: 404,
+                message: "Question not found"
+            });
+            return response;
+        }
+    };
+    questionService.findQuestionById(request.params.question_id)
+        .then(questionExistResponse)
         .catch(handleDbError(response));
+
 };
 
 exports.getQuestions = function (request, response) {
     const questionsRes = (questionRes) => {
         if(questionRes !== null) {
-            console.log("res", questionRes);
             response.status(200);
             response.json(questionRes);
             return response;

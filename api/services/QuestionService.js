@@ -227,7 +227,7 @@ exports.getQuestions = async function () {
     let questionAnswerjoin = questAnswer;
     for (let i=0; i<questionCategoryjoin.length; i++) {
         let result = questionCategoryjoin[i];
-        map[result.question_id] = {question_id: result.question_id, user_id: result.user_id,
+        map[result.question_id] = {question_id: result.question_id,question_text: result.question_text, user_id: result.user_id,
             created_timestamp: result.created_timestamp, updated_timestamp: result.updated_timestamp};
         map[result.question_id].categories = [];
         map[result.question_id].answers = [];
@@ -236,7 +236,6 @@ exports.getQuestions = async function () {
         let result = questionCategoryjoin[i];
         mySet.add(result.question_id);
         if(result.category_id !== null) {
-            console.log("category  " + result.category);
             map[result.question_id].categories.push({category_id: result.category_id, category: result.category});
         }
     }
