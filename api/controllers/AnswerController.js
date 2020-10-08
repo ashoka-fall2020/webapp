@@ -192,10 +192,10 @@ exports.updateAnswer = function (request, response) {
                         .catch(handleDbError(response));
                 };
             } else{
-                response.status(401);
+                response.status(400);
                 response.json({
-                    status: 401,
-                    message: "Access denied: Answer does not belong to given question"
+                    status: 400,
+                    message: "Bad request: Answer does not belong to given question"
                 });
                 return response;
             }
@@ -212,6 +212,7 @@ exports.updateAnswer = function (request, response) {
         .then(getAnswerResponse)
         .catch(handleDbError(response));
 };
+
 
 
 exports.deleteAnswer = function (request, response) {

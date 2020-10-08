@@ -319,9 +319,24 @@ exports.getQuestionById = function (request, response) {
         }
     };
 
-    questionService.getQuestion(request.params.question_id)
-        .then(getResponse)
+    const questionExistResponse = (questionRes) => {
+        if(questionRes !== null) {
+            questionService.getQuestion(request.params.question_id)
+                .then(getResponse)
+                .catch(handleDbError(response));
+        } else{
+            response.status(404);
+            response.json({
+                status: 404,
+                message: "Question not found"
+            });
+            return response;
+        }
+    };
+    questionService.getQuestionByID(request.params.question_id)
+        .then(questionExistResponse)
         .catch(handleDbError(response));
+
 };
 
 exports.getQuestions = function (request, response) {
