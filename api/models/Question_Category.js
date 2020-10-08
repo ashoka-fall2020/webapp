@@ -1,5 +1,3 @@
-let Question = require("./Question");
-let Category = require('./Category');
 module.exports = (sequelize, Sequelize) => {
     const question_category = sequelize.define('question_category', {
         question_id: {
@@ -11,4 +9,5 @@ module.exports = (sequelize, Sequelize) => {
             primaryKey: true,
         }
     }, { timestamps: false });
+    return question_category;
 };

@@ -21,12 +21,9 @@ db.user = require("./User.js")(sequelize, Sequelize);
 db.question = require("./Question.js")(sequelize, Sequelize);
 db.answer = require("./Answer.js")(sequelize, Sequelize);
 db.categories = require("./Category.js")(sequelize, Sequelize);
-db.question_category = require("./Question_Category.js")(sequelize, Sequelize);
+db.question_category = require("./Question_Category")(sequelize, Sequelize);
 
 // db.question.belongsToMany(db.categories, { through: 'question_category' , as: 'categories', foreignKey: 'category_id', timestamps: false});
 // db.categories.belongsToMany(db.question, { through: 'question_category', as: 'questions', foreignKey: 'question_id', timestamps: false });
-
-
-
 
 module.exports = db;

@@ -17,7 +17,6 @@ exports.updateAnswer = function (answer_text, answer_id) {
     return promise;
 };
 
-
 exports.deleteAnswer = function (answer_id) {
     const deleteRes = Answer.destroy({
         where: {answer_id: answer_id}
@@ -28,6 +27,13 @@ exports.deleteAnswer = function (answer_id) {
 exports.findAnswerByAnswerId = function (answer_id) {
     const promise = Answer.findOne({
         where:{answer_id: answer_id}
+    });
+    return promise;
+};
+
+exports.findAnswerByQuestionId = function (question_id) {
+    const promise = Answer.findAll({
+        where:{question_id: question_id}
     });
     return promise;
 };
