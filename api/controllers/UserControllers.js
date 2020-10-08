@@ -72,6 +72,7 @@ exports.create = function (request, response) {
                 status: 400,
                 message: "Bad request: Email already exists"
             });
+            return response;
         } else{
             userService.createAccount(user)
                 .then(handleCreateUserResponse)
@@ -83,11 +84,12 @@ exports.create = function (request, response) {
         if (signUpResponse != null) {
             response.json(getResponseUser(signUpResponse));
         } else {
-            response.status(500);
+            response.status(400);
             response.json({
-                status: 500,
-                message: "Server error: Error in creating user account"
+                status: 400,
+                message: "Unable to perform operation at this time"
             });
+            return response;
         }
     };
 
@@ -99,11 +101,12 @@ exports.create = function (request, response) {
 const handleDbError = (response) => {
     const errorCallBack = (error) => {
         if (error) {
-            response.status(500);
+            response.status(400);
             response.json({
-                status: 500,
-                message: error.message
+                status: 400,
+                message: "Unable to perform operation"
             });
+            return response;
         }
     };
     return errorCallBack;
@@ -137,12 +140,14 @@ exports.update = function(request, response) {
                 status: 204,
                 message: "User details updated Successfully"
             });
+            return response;
         } else {
-            response.status(500);
+            response.status(404);
             response.json({
-                status: 500,
-                message: "Internal server error: Update failed"
+                status: 404,
+                message: "Not found"
             });
+            return response;
         }
     };
 
@@ -221,4 +226,46 @@ let validateUpdateUserRequest = function (request, response) {
         return response;
     }
     return null;
+};
+
+//Get user by id without authentication
+exports.getByUserId = function(request, response) {
+    if(!request.params.user_id) {
+        response.status(404);
+        response.json({
+            status: 404,
+            message: "Not found"
+        });
+        return response;
+    }
+
+    const handleResponse = (userResponse) => {
+        if(userResponse != null ) {
+            response.json(getUseryUserId(userResponse));
+            return response;
+        } else{
+            response.status(404);
+            response.json({
+                status: 404,
+                message: "User not found"
+            });
+            return response;
+        }
+    };
+
+    let getUseryUserId = function (user) {
+        let apiResponse = {
+            id: user.id,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            username: user.username,
+            account_created: user.account_created,
+            account_updated: user.account_updated
+        };
+        return apiResponse;
+    };
+
+    userService.findUserByUserId(request.params.user_id)
+        .then(handleResponse)
+        .catch(handleDbError(response));
 };
