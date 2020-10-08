@@ -117,16 +117,16 @@ exports.updateQuestion = function (request, response) {
         if (updatedQuestion != null) {
             if(request.body.categories !== undefined) {
                 questionService.updateQuestionCategories(updateQuestion, request.body.categories)
-                response.status(200);
+                response.status(204);
                 response.json({
-                    status: 200,
+                    status: 204,
                     message: "Update success"
                 });
                 return response;
             } else{
-                response.status(200);
+                response.status(204);
                 response.json({
-                    status: 200,
+                    status: 204,
                     message: "Update success"
                 });
             }
@@ -134,7 +134,7 @@ exports.updateQuestion = function (request, response) {
             response.status(404);
             response.json({
                 status: 404,
-                message: "Not found"
+                message: "Question not found"
             });
         }
     };

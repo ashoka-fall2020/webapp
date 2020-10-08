@@ -67,88 +67,6 @@ exports.updateQuestion = function(question) {
     return promise;
 };
 
-exports.updateQuestionCategories_ = async function (question, categoriesInPayload) {
-    console.log("question", question);
-    if (categoriesInPayload.length === 0) {
-        console.log("no cats");
-        return Question_Category.destroy({
-            where:{question_id: question.question_id}
-        });
-    }
-    let allCategoriesInDB = await Category.findAll({
-        raw: true
-    });
-    let payloadMinusDb = [];
-    let categoryNamesInPayload = categoriesInPayload.map(cat => cat.category);
-    let allCategoryNames = [];
-    if(allCategoriesInDB.length !== 0) {
-        allCategoryNames = allCategoriesInDB.map(cat => cat.category);
-        console.log("allCategoryNames", allCategoryNames);
-        // removing from payload, the categories in DB
-        payloadMinusDb = categoryNamesInPayload.filter(e => !allCategoryNames.includes(e));
-    }
-    else{
-        payloadMinusDb = categoryNamesInPayload;
-    }
-    console.log("payloadMinusDb", payloadMinusDb);
-    //cats to be added
-    if(payloadMinusDb.length !== 0) {
-        let records = [];
-        payloadMinusDb.map(cat => {
-            records.push({
-                category_id: uuidv4(),
-                category: cat
-            });
-        });
-        await Category.bulkCreate(records);
-    }
-    // ==============TESTED ABOVE=================
-    // Category table add / updates are done
-    let allCategoriesInQuestionCategoryDbForQuestion = await Question_Category.findAll({where:{question_id: question.question_id},raw: true});
-    let allCategoryIdsInQuestionCategoryDbForQuestion = allCategoriesInQuestionCategoryDbForQuestion.map(x => x.category_id);
-    let categoryNamesForQuestionCategories = await Category.findAll({where:{category_id: allCategoryIdsInQuestionCategoryDbForQuestion}});
-    if(allCategoriesInQuestionCategoryDbForQuestion.length !== 0) {
-        let categoryIdsToBeRemoved = categoryNamesForQuestionCategories.filter(cat => !categoryNamesInPayload.includes(cat.category)).map(cat => cat.category_id);
-        console.log("categoryIdsToBeRemoved************", categoryIdsToBeRemoved);
-        await Question_Category.destroy({
-            where:{question_id: question.question_id, category_id: categoryIdsToBeRemoved}
-        });
-    }
-    // ==============TESTED ABOVE=================
-    // Add new entries to QC table
-    allCategoriesInQuestionCategoryDbForQuestion = await Question_Category.findAll({
-        where:{question_id: question.question_id},
-        raw: true
-    });
-    console.log("AllCats ", allCategoriesInQuestionCategoryDbForQuestion);
-    allCategoryIdsInQuestionCategoryDbForQuestion = allCategoriesInQuestionCategoryDbForQuestion.map(e => e.category_id);
-    console.log("AllCatIds ", allCategoryIdsInQuestionCategoryDbForQuestion);
-    let allQCNames = await Category.findAll({
-        where:{category_id: allCategoryIdsInQuestionCategoryDbForQuestion},
-        raw: true
-    });
-    allQCNames = allQCNames.map(e => e.category);
-    console.log("allQCNames ", allQCNames);
-    let filterQC = allCategoryNames.filter(e => !allQCNames.includes(e));
-    console.log("AllCats ", allCategoryIdsInQuestionCategoryDbForQuestion);
-    console.log("FilterCats ", filterQC);
-    console.log("incomingCats", categoryNamesInPayload);
-    let records = [];
-    let categoriesToBeInserted = await Category.findAll({
-        where:{category: filterQC}
-    });
-    console.log("categoriesToBeInserted", categoriesToBeInserted);
-    categoriesToBeInserted.map(cat => {
-        records.push({
-            question_id: question.question_id,
-            category_id: cat.category_id,
-            category: cat.category
-        });
-    });
-    let addToCats = await Question_Category.bulkCreate(records);
-    return addToCats;
-};
-
 exports.updateQuestionCategories = async function (question, categoriesInPayload) {
     console.log(question);
     console.log("categoriesInPayload", categoriesInPayload);
@@ -172,64 +90,65 @@ exports.updateQuestionCategories = async function (question, categoriesInPayload
             payloadMinusDb = categoryNamesInPayload;
         }
         console.log("payloadMinusDb", payloadMinusDb);
+        let records = [];
         if(payloadMinusDb.length !== 0) {
-            let records = [];
             payloadMinusDb.map(cat => {
                 records.push({
                     category_id: uuidv4(),
                     category: cat
                 });
+
             });
-            Category.bulkCreate(records).then(() => {
-                Question_Category.findAll({where:{question_id: question.question_id},raw: true})
-                    .then((allCategoriesInQuestionCategoryDbForQuestion) => {
-                        console.log("allCategoriesInQuestionCategoryDbForQuestion", allCategoriesInQuestionCategoryDbForQuestion);
-                        let allCategoryIdsInQuestionCategoryDbForQuestion = allCategoriesInQuestionCategoryDbForQuestion.map(x => x.category_id);
-                        Category.findAll({where:{category_id: allCategoryIdsInQuestionCategoryDbForQuestion}})
-                            .then((categoryNamesForQuestionCategories) => {
-                                console.log("categoryNamesForQuestionCategories", categoryNamesForQuestionCategories);
-                                let categoryIdsToBeRemoved = categoryNamesForQuestionCategories.filter(cat => !categoryNamesInPayload.includes(cat.category)).map(cat => cat.category_id);
-                                console.log("categoryIdsToBeRemoved", categoryIdsToBeRemoved);
-                                Question_Category.destroy({
-                                    where:{question_id: question.question_id, category_id: categoryIdsToBeRemoved}
-                                }).then(() => {
-                                    Question_Category.findAll({
-                                        where:{question_id: question.question_id},
+        }
+        Category.bulkCreate(records).then(() => {
+            console.log("ia m in then");
+            Question_Category.findAll({where:{question_id: question.question_id},raw: true})
+                .then((allCategoriesInQuestionCategoryDbForQuestion) => {
+                    console.log("allCategoriesInQuestionCategoryDbForQuestion", allCategoriesInQuestionCategoryDbForQuestion);
+                    let allCategoryIdsInQuestionCategoryDbForQuestion = allCategoriesInQuestionCategoryDbForQuestion.map(x => x.category_id);
+                    Category.findAll({where:{category_id: allCategoryIdsInQuestionCategoryDbForQuestion}})
+                        .then((categoryNamesForQuestionCategories) => {
+                            console.log("categoryNamesForQuestionCategories", categoryNamesForQuestionCategories);
+                            let categoryIdsToBeRemoved = categoryNamesForQuestionCategories.filter(cat => !categoryNamesInPayload.includes(cat.category)).map(cat => cat.category_id);
+                            console.log("categoryIdsToBeRemoved", categoryIdsToBeRemoved);
+                            Question_Category.destroy({
+                                where:{question_id: question.question_id, category_id: categoryIdsToBeRemoved}
+                            }).then(() => {
+                                Question_Category.findAll({
+                                    where:{question_id: question.question_id},
+                                    raw: true
+                                }).then((allCategoriesInQuestionCategoryDbForQuestionV2) => {
+                                    console.log("allCategoriesInQuestionCategoryDbForQuestionV2 ", allCategoriesInQuestionCategoryDbForQuestionV2);
+                                    allCategoryIdsInQuestionCategoryDbForQuestion = allCategoriesInQuestionCategoryDbForQuestionV2.map(e => e.category_id);
+                                    console.log("allCategoryIdsInQuestionCategoryDbForQuestion ", allCategoryIdsInQuestionCategoryDbForQuestion);
+                                    Category.findAll({
+                                        where:{category_id: allCategoryIdsInQuestionCategoryDbForQuestion},
                                         raw: true
-                                    }).then((allCategoriesInQuestionCategoryDbForQuestionV2) => {
-                                        console.log("allCategoriesInQuestionCategoryDbForQuestionV2 ", allCategoriesInQuestionCategoryDbForQuestionV2);
-                                        allCategoryIdsInQuestionCategoryDbForQuestion = allCategoriesInQuestionCategoryDbForQuestionV2.map(e => e.category_id);
-                                        console.log("allCategoryIdsInQuestionCategoryDbForQuestion ", allCategoryIdsInQuestionCategoryDbForQuestion);
+                                    }).then((allQCNames) => {
+                                        console.log("allQCNamesa", allQCNames);
+                                        let allQCategoryNames = allQCNames.map(e => e.category);
+                                        console.log("allQCategoryNames", allQCategoryNames);
+                                        let categoryNamesNewInPayload = categoryNamesInPayload.filter(e => !allQCategoryNames.includes(e));
+                                        console.log("categoryNamesNewInPayload", categoryNamesNewInPayload);
+                                        let records = [];
                                         Category.findAll({
-                                            where:{category_id: allCategoryIdsInQuestionCategoryDbForQuestion},
-                                            raw: true
-                                        }).then((allQCNames) => {
-                                            console.log("allQCNamesa", allQCNames);
-                                            let allQCategoryNames = allQCNames.map(e => e.category);
-                                            console.log("allQCategoryNames", allQCategoryNames);
-                                            let categoryNamesNewInPayload = categoryNamesInPayload.filter(e => !allQCategoryNames.includes(e));
-                                            console.log("categoryNamesNewInPayload", categoryNamesNewInPayload);
-                                            let records = [];
-                                            Category.findAll({
-                                                where:{category: categoryNamesNewInPayload}
-                                            }).then((categoriesToBeInserted) => {
-                                                console.log("categoriesToBeInserted", categoriesToBeInserted);
-                                                categoriesToBeInserted.map(cat => {
-                                                    records.push({
-                                                        question_id: question.question_id,
-                                                        category_id: cat.category_id
-                                                    });
+                                            where:{category: categoryNamesNewInPayload}
+                                        }).then((categoriesToBeInserted) => {
+                                            console.log("categoriesToBeInserted", categoriesToBeInserted);
+                                            categoriesToBeInserted.map(cat => {
+                                                records.push({
+                                                    question_id: question.question_id,
+                                                    category_id: cat.category_id
                                                 });
-                                                return Question_Category.bulkCreate(records, {returning: true});
                                             });
+                                            return Question_Category.bulkCreate(records, {returning: true});
                                         });
                                     });
                                 });
                             });
-                    });
-            });
-        }
-
+                        });
+                });
+        });
     });
     return promise;
 };
@@ -292,7 +211,8 @@ exports.getQuestions = async function () {
         "left join " +
         "`categories` as c on qc.category_id = c.category_id";
 
-    let questCat = await db.sequelize.query(qc);
+    let questCat = await db.sequelize.query(qc, { type: db.sequelize.QueryTypes.SELECT });
+    console.log("questcat", questCat);
      let qa = "SELECT q.question_id, "+
     "a.answer_id, " +
     "a.user_id, " +
@@ -300,28 +220,27 @@ exports.getQuestions = async function () {
     "a.created_timestamp,  " +
     "a.updated_timestamp FROM `questions` as q left join `answers` as a on q.question_id = a.question_id" ;
 
-    let questAnswer = await db.sequelize.query(qa);
+    let questAnswer = await db.sequelize.query(qa, { type: db.sequelize.QueryTypes.SELECT });
     let map = new Map();
     let mySet = new Set();
-    let questionCategoryjoin = questCat[0];
-    let questionAnswerjoin = questAnswer[0];
+    let questionCategoryjoin = questCat;
+    let questionAnswerjoin = questAnswer;
     for (let i=0; i<questionCategoryjoin.length; i++) {
         let result = questionCategoryjoin[i];
         map[result.question_id] = {question_id: result.question_id, user_id: result.user_id,
             created_timestamp: result.created_timestamp, updated_timestamp: result.updated_timestamp};
+        map[result.question_id].categories = [];
+        map[result.question_id].answers = [];
     }
     for (let i=0; i<questionCategoryjoin.length; i++) {
-
         let result = questionCategoryjoin[i];
         mySet.add(result.question_id);
-        if(!map.has(result.question_id)) {
-            map[result.question_id].categories = [];
-            map[result.question_id].answers = [];
-        }
         if(result.category_id !== null) {
+            console.log("category  " + result.category);
             map[result.question_id].categories.push({category_id: result.category_id, category: result.category});
         }
     }
+
     for (let i=0; i<questionAnswerjoin.length; i++) {
         let result = questionAnswerjoin[i];
         if(result.answer_id !== null) {
@@ -330,10 +249,6 @@ exports.getQuestions = async function () {
         }
     }
     let payload = [];
-    for (let i=0; i<questionAnswerjoin.length; i++) {
-        console.log("Map value", map[questionAnswerjoin[i].question_id]);
-        payload.push(map[questionAnswerjoin[i].question_id]);
-    }
     for (let item of mySet) {
         payload.push(map[item]);
     }
