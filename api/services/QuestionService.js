@@ -236,7 +236,6 @@ exports.getQuestions = async function () {
         let result = questionCategoryjoin[i];
         mySet.add(result.question_id);
         if(result.category_id !== null) {
-            console.log("category  " + result.category);
             map[result.question_id].categories.push({category_id: result.category_id, category: result.category});
         }
     }

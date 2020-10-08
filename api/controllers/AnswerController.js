@@ -10,10 +10,10 @@ const Answer = db.answer;
 const handleDbError = (response) => {
     const errorCallBack = (error) => {
         if (error) {
-            response.status(500);
+            response.status(400);
             response.json({
-                status: 500,
-                message: error.message
+                status: 400,
+                message: "Unable to perform operation"
             });
         }
     };
@@ -21,7 +21,7 @@ const handleDbError = (response) => {
 };
 
 exports.addAnswer = function (request, response) {
-    if(request.body.answer_text === null || request.body.answer_text.length === 0) {
+    if(request.body.answer_text === null || request.body.answer_text === undefined || request.body.answer_text.length === 0 ) {
         console.log("error creating answer");
         response.json({
             status: 400,
@@ -125,7 +125,7 @@ exports.updateAnswer = function (request, response) {
         });
         return response;
     }
-    if(request.body.answer_text === null || request.body.answer_text.length === 0) {
+    if(request.body.answer_text === null || request.body.answer_text === undefined|| request.body.answer_text.length === 0) {
         console.log("error creating answer");
         response.json({
             status: 400,
@@ -234,17 +234,17 @@ exports.deleteAnswer = function (request, response) {
 
     const handleDeleteResponse = (deleteAnswer) => {
         if(deleteAnswer != null) {
-            response.status(204);
+            response.status(200);
             response.json({
-                status: 204,
+                status: 200,
                 message: "Answer deleted successfully"
             });
             return response;
         } else {
-            response.status(400);
+            response.status(404);
             response.json({
-                status: 400,
-                message: "Error in deleting answer"
+                status: 404,
+                message: "Answer: Not found"
             });
             return response;
         }
@@ -298,7 +298,7 @@ exports.deleteAnswer = function (request, response) {
                 return response;
             }
         } else{
-            response.status(400);
+            response.status(404);
             response.json({
                 status: 404,
                 message: "Answer not found"
