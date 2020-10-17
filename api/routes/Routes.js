@@ -32,5 +32,13 @@ module.exports = app => {
     app.route('/v1/question/:question_id/answer/:answer_id')
         .get(answer.getAnswer);
 
+    app.route('/v1/question/:question_id/file')
+        .post();
+    app.route('/v1/question/:question_id/answer/:answer_id/file')
+        .post();
+    app.route('/v1/question/:question_id/file/:file_id')
+        .delete();
+    app.route('/v1/question/:question_id/answer/:answer_id/file/:file_id')
+        .delete();
 
 };

@@ -2,11 +2,13 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const db = require("./api/models");
+const mysql = require('mysql2/promise');
+const dbConfig = require("./api/config/dbconfig");
 
 function main () {
     const app = express();
     // set port, listen for requests
-    const PORT = process.env.PORT || 8080;
+    const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}.`);
     });
@@ -26,13 +28,16 @@ function main () {
     });
 
     let routes = require('./api/routes/Routes');
-    routes(app); //register the route
+    routes(app);
 
-    //db.sequelize.sync();
-     db.sequelize.sync({ force: true }).then(() => {
-        console.log("Drop and re-sync db.");
-    });
+    db.sequelize.sync();
+
+    //  db.sequelize.sync({ force: true }).then(() => {
+    //     console.log("Drop and re-sync db.");
+    // });
+
 }
+
 main();
 
 

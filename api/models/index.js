@@ -1,6 +1,19 @@
 const dbConfig = require("../config/dbconfig.js");
+const mysql = require('mysql2/promise');
 
 const Sequelize = require("sequelize");
+
+mysql.createConnection({
+    host: process.env.DB_HOST || "127.0.0.1",
+    port: process.env.DB_PORT || "3306",
+    user     : process.env.DB_USER || "root",
+    password : process.env.DB_PASSWORD || "bellevue1@",
+}).then( connection => {
+    connection.query(`CREATE DATABASE IF NOT EXISTS ${dbConfig.DB};`).then((res) => {
+        console.info("Database create or successfully checked");
+    })
+});
+
 const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
     host: dbConfig.HOST,
     dialect: dbConfig.dialect,
@@ -11,9 +24,8 @@ const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
         acquire: dbConfig.pool.acquire,
         idle: dbConfig.pool.idle
     },
-    logging: true
+    // logging: true
 });
-
 const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
@@ -22,8 +34,7 @@ db.question = require("./Question.js")(sequelize, Sequelize);
 db.answer = require("./Answer.js")(sequelize, Sequelize);
 db.categories = require("./Category.js")(sequelize, Sequelize);
 db.question_category = require("./Question_Category")(sequelize, Sequelize);
-
-// db.question.belongsToMany(db.categories, { through: 'question_category' , as: 'categories', foreignKey: 'category_id', timestamps: false});
-// db.categories.belongsToMany(db.question, { through: 'question_category', as: 'questions', foreignKey: 'question_id', timestamps: false });
+db.file = require("./File")(sequelize, Sequelize);
 
 module.exports = db;
+
