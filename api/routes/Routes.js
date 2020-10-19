@@ -38,10 +38,8 @@ module.exports = app => {
         .post(upload.single("file"), file.uploadFileForQuestion);
     app.route('/v1/question/:question_id/file/:file_id')
         .delete(file.deleteFileForQuestion);
-    app.route('/v1/question/:question_id/answer/:answer_id/fsile')
-        .post();
-    app.route('/v1/question/:question_id/file/:file_id')
-        .delete();
+    app.route('/v1/question/:question_id/answer/:answer_id/file')
+        .post(upload.single("file"), file.uploadFileForAnswer);
     app.route('/v1/question/:question_id/answer/:answer_id/file/:file_id')
         .delete();
 

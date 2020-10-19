@@ -17,6 +17,20 @@ exports.uploadFileForQuestion = async function (request, file) {
     return newFile.save();
 };
 
+exports.uploadFileForAnswer = async function (request, file) {
+    console.log("upload file for answer");
+    file.file_name = request.file.originalname;
+    file.s3_object_name = request.file.filename;
+    const params = {
+        Bucket      : 'eg-sample-bucket',
+        Key         :  request.file.filename
+    };
+    const metaData = await s3.headObject(params).promise();
+    console.log(metaData);
+    const newFile = new File(file);
+    return newFile.save();
+};
+
 exports.uploadFileToS3 = function(request) {
     let fileData = fs.readFileSync(request.file.path);
     const putParams = {
