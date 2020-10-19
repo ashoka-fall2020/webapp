@@ -6,7 +6,7 @@ module.exports = (sequelize, Sequelize) => {
         },
         file_name: {
             type: Sequelize.STRING,
-            primaryKey: true,
+            allowNull: false
         },
         s3_object_name: {
             type: Sequelize.STRING,
@@ -14,9 +14,13 @@ module.exports = (sequelize, Sequelize) => {
         },
         answer_id: {
             type: Sequelize.STRING,
-            allowNull: false
+            allowNull: true
         },
         question_id: {
+            type: Sequelize.STRING,
+            allowNull: false
+        },
+        user_id: {
             type: Sequelize.STRING,
             allowNull: false
         }

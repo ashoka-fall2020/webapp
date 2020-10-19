@@ -1,7 +1,9 @@
+const upload = require('../config/uploadconfig');
 module.exports = app => {
     const user = require("../controllers/UserControllers");
     const question = require("../controllers/QuestionController");
     const answer = require("../controllers/AnswerController");
+    const file = require("../controllers/FileControllers");
 
     app.route('/v1/user')
         .post(user.create);
@@ -33,8 +35,10 @@ module.exports = app => {
         .get(answer.getAnswer);
 
     app.route('/v1/question/:question_id/file')
-        .post();
-    app.route('/v1/question/:question_id/answer/:answer_id/file')
+        .post(upload.single("file"), file.uploadFileForQuestion);
+    app.route('/v1/question/:question_id/file/:file_id')
+        .delete(file.deleteFileForQuestion);
+    app.route('/v1/question/:question_id/answer/:answer_id/fsile')
         .post();
     app.route('/v1/question/:question_id/file/:file_id')
         .delete();
