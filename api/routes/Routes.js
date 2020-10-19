@@ -41,6 +41,6 @@ module.exports = app => {
     app.route('/v1/question/:question_id/answer/:answer_id/file')
         .post(upload.single("file"), file.uploadFileForAnswer);
     app.route('/v1/question/:question_id/answer/:answer_id/file/:file_id')
-        .delete();
+        .delete(file.deleteFileForAnswer);
 
 };
