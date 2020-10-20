@@ -1,10 +1,11 @@
 const db = require("../models");
 const Answer = db.answer;
+const File = db.file;
 
-exports.createAnswer = function (answer) {
+exports.createAnswer = async function (answer) {
     const newAnswer = new Answer(answer);
-    const promise = newAnswer.save();
-    return promise;
+    const dbAnswer = await newAnswer.save();
+    return exports.findAnswerByAnswerId(dbAnswer.answer_id);
 };
 
 exports.updateAnswer = function (answer_text, answer_id) {
@@ -24,11 +25,24 @@ exports.deleteAnswer = function (answer_id) {
     return deleteRes;
 };
 
-exports.findAnswerByAnswerId = function (answer_id) {
-    const promise = Answer.findOne({
+exports.findAnswerByAnswerId = async function (answer_id) {
+    console.log("find answer ", answer_id);
+    let out = {};
+    let answer = await Answer.findOne({
         where:{answer_id: answer_id}
     });
-    return promise;
+    let attachments = await File.findAll({
+        where:{answer_id: answer_id},
+        attributes: { exclude: ['updatedAt', 'question_id', 'answer_id', 'user_id'] }
+    });
+    out.answer_id = answer.answer_id;
+    out.answer_text = answer.answer_text;
+    out.question_id = answer.question_id;
+    out.user_id = answer.user_id;
+    out.created_timestamp = answer.created_timestamp;
+    out.updated_timestamp = answer.updated_timestamp;
+    out.attachments = attachments;
+    return out;
 };
 
 exports.findAnswerByQuestionId = function (question_id) {

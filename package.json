@@ -25,5 +25,8 @@
     "password-validator": "^5.1.0",
     "sequelize": "^6.3.5",
     "uuid": "^8.3.0"
+  },
+  "devDependencies": {
+
   }
 }

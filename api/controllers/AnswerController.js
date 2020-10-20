@@ -325,7 +325,8 @@ exports.getAnswer = function (request, response) {
 
     const getResponse = (answerRes) => {
         if(answerRes != null) {
-            if(answerRes.question_id === request.params.question_id) {
+            console.log(answerRes.question_id === request.params.question_id);
+            if(answerRes.question_id.toString().trim() === request.params.question_id.toString().trim()) {
                 response.status(200);
                 response.json(answerRes);
                 return response;

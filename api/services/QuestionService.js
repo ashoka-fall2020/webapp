@@ -3,6 +3,7 @@ const db = require("../models");
 const Question = db.question;
 const Category = db.categories;
 const Answer = db.answer;
+const File = db.file;
 const Question_Category = db.question_category;
 const {v4: uuidv4} = require("uuid");
 
@@ -185,8 +186,41 @@ exports.getQuestion = async function (question_id) {
         where:{category_id: questionCategories}
     });
     question.categories = categories;
+    let questionAnswers = [];
     let answers = await Answer.findAll({
         where:{question_id: question_id}
+    });
+    if(answers.length > 0) {
+        let answerIds = answers.map(e => e.answer_id);
+        let answerAttachments = await File.findAll({
+            where:{answer_id: answerIds},
+            attributes: { exclude: ['updatedAt', 'question_id', 'user_id'] }
+        });
+        for (let answer of answers) {
+            let outAnswer = {};
+            answer.attachments = answerAttachments.filter(function(item) {
+                return item.answer_id === answer.answer_id;
+            });
+            outAnswer.answer_id = answer.answer_id;
+            outAnswer.answer_text = answer.answer_text;
+            outAnswer.question_id = answer.question_id;
+            outAnswer.user_id = answer.user_id;
+            outAnswer.created_timestamp = answer.created_timestamp;
+            outAnswer.updated_timestamp = answer.updated_timestamp;
+            outAnswer.attachments = answer.attachments;
+            questionAnswers.push(outAnswer);
+        }
+        for (let answer of questionAnswers) {
+            if(answer.attachments.length > 0){
+                for (let file of answer.attachments) {
+                    delete file.dataValues.answer_id;
+                }
+            }
+        }
+    }
+    let attachments = await File.findAll({
+        where:{question_id: question_id, answer_id: null},
+        attributes: { exclude: ['updatedAt', 'question_id', 'answer_id', 'user_id'] }
     });
     question.answers = answers;
     out.question_id = question.question_id;
@@ -195,7 +229,8 @@ exports.getQuestion = async function (question_id) {
     out.user_id = question.user_id;
     out.question_text = question.question_text;
     out.categories = categories;
-    out.answers = answers;
+    out.answers = questionAnswers;
+    out.attachments = attachments;
     return out;
 };
 
