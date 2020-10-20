@@ -259,18 +259,43 @@ exports.getQuestion = async function (question_id) {
 
 exports.getQuestions = async function () {
 
-    let qc = "SELECT q.question_id, " +
+    let qc = "SELECT " +
+        "q.question_id, " +
         "q.question_text, " +
-        "q.user_id, q" +
-        ".created_timestamp, " +
+        "q.user_id, " +
+        "q.created_timestamp, " +
         "q.updated_timestamp, " +
         "c.category_id, " +
-        "c.category FROM `questions` as q left join `question_categories` as qc on q.question_id = qc.question_id " +
+        "c.category " +
+        "FROM " +
+        "`questions` as q " +
         "left join " +
-        "`categories` as c on qc.category_id = c.category_id";
-
+        "`question_categories` as qc " +
+        "on " +
+        "q.question_id = qc.question_id " +
+        "left join " +
+        "`categories` as c " +
+        "on " +
+        "qc.category_id = c.category_id";
     let questCat = await db.sequelize.query(qc, { type: db.sequelize.QueryTypes.SELECT });
     console.log("questcat", questCat);
+
+    let qf = "SELECT " +
+        "q.question_id, "+
+        "f.file_id, " +
+        "f.file_name, " +
+        "f.s3_object_name, " +
+        "f.created_date " +
+        "FROM " +
+        "`questions` as q " +
+        "left join " +
+        "`files` as f " +
+        "on " +
+        "q.question_id = f.question_id " +
+        "and f.answer_id is NULL" ;
+    let questFile = await db.sequelize.query(qf, { type: db.sequelize.QueryTypes.SELECT });
+    console.log("questfile ", qf);
+
      let qa = "SELECT q.question_id, "+
     "a.answer_id, " +
     "a.user_id, " +
@@ -279,17 +304,44 @@ exports.getQuestions = async function () {
     "a.updated_timestamp FROM `questions` as q left join `answers` as a on q.question_id = a.question_id" ;
 
     let questAnswer = await db.sequelize.query(qa, { type: db.sequelize.QueryTypes.SELECT });
+    let af = "SELECT " +
+        "a.answer_id, "+
+        "f.file_id, " +
+        "f.file_name, " +
+        "f.s3_object_name, " +
+        "f.created_date " +
+        "FROM " +
+        "`answers` as a " +
+        "left join " +
+        "`files` as f " +
+        "on " +
+        "a.answer_id = f.answer_id";
+    let answerFile = await db.sequelize.query(af, { type: db.sequelize.QueryTypes.SELECT });
+    console.log("answerFile ", af);
+
     let map = new Map();
+    let answerMap = new Map();
     let mySet = new Set();
     let questionCategoryjoin = questCat;
+    let questionFileJoin = questFile;
     let questionAnswerjoin = questAnswer;
+    let answerFileJoin = answerFile;
+    console.log("here 1");
     for (let i=0; i<questionCategoryjoin.length; i++) {
         let result = questionCategoryjoin[i];
         map[result.question_id] = {question_id: result.question_id,question_text: result.question_text, user_id: result.user_id,
             created_timestamp: result.created_timestamp, updated_timestamp: result.updated_timestamp};
         map[result.question_id].categories = [];
         map[result.question_id].answers = [];
+        map[result.question_id].attachments = [];
     }
+    console.log("here 2");
+    for (let i=0; i<answerFileJoin.length; i++) {
+        let result = answerFileJoin[i];
+        answerMap[result.answer_id] = {};
+        answerMap[result.answer_id].attachments = [];
+    }
+    console.log("here 2.5");
     for (let i=0; i<questionCategoryjoin.length; i++) {
         let result = questionCategoryjoin[i];
         mySet.add(result.question_id);
@@ -298,13 +350,36 @@ exports.getQuestions = async function () {
         }
     }
 
+    console.log("here 3");
+    for (let i=0; i<questionFileJoin.length; i++) {
+        let result = questionFileJoin[i];
+        if(result.file_id !== null) {
+            map[result.question_id].attachments.push({file_id: result.file_id,  file_name: result.file_name, s3_object_name: result.s3_object_name,
+                created_date: result.created_date});
+        }
+    }
+
+    console.log("here 4");
+    for (let i=0; i<answerFileJoin.length; i++) {
+        let result = answerFileJoin[i];
+        if(result.file_id !== null) {
+            console.log("answer file result", result);
+            answerMap[result.answer_id].attachments.push({file_id: result.file_id,  file_name: result.file_name, s3_object_name: result.s3_object_name,
+                created_date: result.created_date});
+        }
+    }
+
+    console.log("here 5", answerMap);
     for (let i=0; i<questionAnswerjoin.length; i++) {
         let result = questionAnswerjoin[i];
         if(result.answer_id !== null) {
-            map[result.question_id].answers.push({answer_id: result.answer_id,  question_id: result.question_id, answer_text: result.answer_text, user_id: result.user_id,
-                created_timestamp: result.created_timestamp, updated_timestamp: result.updated_timestamp});
+            let answer = {answer_id: result.answer_id,  question_id: result.question_id, answer_text: result.answer_text, user_id: result.user_id,
+                created_timestamp: result.created_timestamp, updated_timestamp: result.updated_timestamp, attachments: answerMap[result.answer_id].attachments};
+            map[result.question_id].answers.push(answer);
         }
     }
+
+    console.log("here 6");
     let payload = [];
     for (let item of mySet) {
         payload.push(map[item]);
