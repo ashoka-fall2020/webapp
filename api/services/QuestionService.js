@@ -6,6 +6,7 @@ const Answer = db.answer;
 const File = db.file;
 const Question_Category = db.question_category;
 const {v4: uuidv4} = require("uuid");
+const s3 = require('../config/s3config');
 
 exports.addQuestion = async function (question) {
     const newQuestion = new Question(question);
@@ -158,6 +159,25 @@ exports.deleteQuestion = async function(question_id) {
     await Question_Category.destroy({
         where:{question_id: question_id}
     });
+    let files = await File.findAll({
+        where:{question_id: question_id, answer_id: null},
+    });
+    if(files.length > 0) {
+        let objects = [];
+        for(let k in files){
+            objects.push({Key : files[k].s3_object_name});
+        }
+        let options = {
+            Bucket:s3.bucketName,
+            Delete: {
+                Objects: objects
+            }
+        };
+        await s3.s3.deleteObjects(options).promise();
+        await File.destroy({
+            where:{question_id: question_id, answer_id: null}
+        });
+    }
     const promise = Question.destroy({
         where:{question_id: question_id}
     });
@@ -176,6 +196,9 @@ exports.getQuestion = async function (question_id) {
     let question = await Question.findOne({
         where:{question_id: question_id}
     });
+    if(question === null || question === undefined){
+        return question;
+    }
     let questionCategories = await Question_Category.findAll({
         where:{question_id: question_id}
     });
