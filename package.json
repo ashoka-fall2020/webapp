@@ -4,12 +4,15 @@
   "description": "Assignment-2 of Network Structures and Cloud Computing",
   "main": "server.js",
   "scripts": {
-    "test": "mocha --reporter spec"
+    "test": "mocha --reporter spec",
+    "dev": "node server.js",
+    "prod": "cp /home/ubuntu/.env  ./.env && NODE_ENV=production node server.js"
   },
   "repository": "https://github.com/ashokaparna/webapp",
   "author": "Aparna",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.773.0",
     "basic-auth": "^2.0.1",
     "bcrypt": "^5.0.0",
     "body-parser": "^1.19.0",
@@ -19,9 +22,13 @@
     "email-validator": "^2.0.4",
     "express": "^4.17.1",
     "mocha": "^8.1.3",
+    "multer": "^1.4.2",
     "mysql2": "^2.2.5",
     "password-validator": "^5.1.0",
     "sequelize": "^6.3.5",
     "uuid": "^8.3.0"
+  },
+  "devDependencies": {
+
   }
 }

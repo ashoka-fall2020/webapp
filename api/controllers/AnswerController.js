@@ -99,7 +99,7 @@ exports.addAnswer = function (request, response) {
                 }
             })
             .catch(handleDbError(response));
-    };
+    }
 };
 
 exports.updateAnswer = function (request, response) {
@@ -325,11 +325,12 @@ exports.getAnswer = function (request, response) {
 
     const getResponse = (answerRes) => {
         if(answerRes != null) {
-            if(answerRes.question_id === request.params.question_id) {
+            console.log(answerRes.question_id === request.params.question_id);
+            if(answerRes.question_id.toString().trim() === request.params.question_id.toString().trim()) {
                 response.status(200);
                 response.json(answerRes);
                 return response;
-            } else{
+            } else {
                 response.status(404);
                 response.json({
                     status: 404,
@@ -337,12 +338,6 @@ exports.getAnswer = function (request, response) {
                 });
                 return response;
             }
-            response.status(204);
-            response.json({
-                status: 204,
-                message: "Answer deleted successfully"
-            });
-            return response;
         } else {
             response.status(404);
             response.json({
