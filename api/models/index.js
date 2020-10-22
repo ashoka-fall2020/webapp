@@ -4,10 +4,10 @@ const mysql = require('mysql2/promise');
 const Sequelize = require("sequelize");
 
 mysql.createConnection({
-    host: process.env.DB_HOST || "127.0.0.1",
-    port: process.env.DB_PORT || "3306",
-    user     : process.env.DB_USER || "root",
-    password : process.env.DB_PASSWORD || "bellevue1@",
+    host: dbConfig.HOST,
+    port: dbConfig.PORT,
+    user     : dbConfig.USER ,
+    password : dbConfig.PASSWORD
 }).then( connection => {
     connection.query(`CREATE DATABASE IF NOT EXISTS ${dbConfig.DB};`).then((res) => {
         console.info("Database create or successfully checked");

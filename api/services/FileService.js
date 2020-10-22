@@ -8,7 +8,7 @@ exports.uploadFileForQuestion = async function (request, file) {
     file.file_name = request.file.originalname;
     file.s3_object_name = request.file.filename;
     const params = {
-        Bucket      : 'eg-sample-bucket',
+        Bucket      : s3.bucketName,
         Key         :  request.file.filename
     };
     const metaData = await s3.s3.headObject(params).promise();
@@ -22,7 +22,7 @@ exports.uploadFileForAnswer = async function (request, file) {
     file.file_name = request.file.originalname;
     file.s3_object_name = request.file.filename;
     const params = {
-        Bucket      : 'eg-sample-bucket',
+        Bucket      : s3.bucketName,
         Key         :  request.file.filename
     };
     const metaData = await s3.s3.headObject(params).promise();
@@ -34,7 +34,7 @@ exports.uploadFileForAnswer = async function (request, file) {
 exports.uploadFileToS3 = function(request) {
     let fileData = fs.readFileSync(request.file.path);
     const putParams = {
-        Bucket      : 'eg-sample-bucket',
+        Bucket      : s3.bucketName,
         Key         :  request.file.filename,
         Body        :  fileData
     };
@@ -51,7 +51,7 @@ exports.getFileDetails = function(request) {
 
 exports.deleteFileFromS3 = function(file) {
     const params = {
-        Bucket      : 'eg-sample-bucket',
+        Bucket      : s3.bucketName,
         Key         :  file.s3_object_name,
     };
     return s3.s3.deleteObject(params).promise();

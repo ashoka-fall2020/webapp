@@ -1,11 +1,11 @@
-require('dotenv').config();
+require('dotenv').config({ path: '/home/ubuntu/.env' });
 
 module.exports = {
     HOST: process.env.DATABASE_HOST_NAME,
     USER: process.env.DATABASE_USER_NAME,
     PASSWORD: process.env.DATABASE_PASSWORD,
     DB: process.env.DATABASE_NAME,
-    PORT: 3000,
+    PORT: 3036,
     dialect: 'mysql',
     pool: {
         max: 5,
