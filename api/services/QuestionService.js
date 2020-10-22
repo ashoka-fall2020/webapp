@@ -317,7 +317,6 @@ exports.getQuestions = async function () {
         "on " +
         "a.answer_id = f.answer_id";
     let answerFile = await db.sequelize.query(af, { type: db.sequelize.QueryTypes.SELECT });
-    console.log("answerFile ", af);
 
     let map = new Map();
     let answerMap = new Map();
@@ -326,7 +325,7 @@ exports.getQuestions = async function () {
     let questionFileJoin = questFile;
     let questionAnswerjoin = questAnswer;
     let answerFileJoin = answerFile;
-    console.log("here 1");
+
     for (let i=0; i<questionCategoryjoin.length; i++) {
         let result = questionCategoryjoin[i];
         map[result.question_id] = {question_id: result.question_id,question_text: result.question_text, user_id: result.user_id,
@@ -335,13 +334,13 @@ exports.getQuestions = async function () {
         map[result.question_id].answers = [];
         map[result.question_id].attachments = [];
     }
-    console.log("here 2");
+
     for (let i=0; i<answerFileJoin.length; i++) {
         let result = answerFileJoin[i];
         answerMap[result.answer_id] = {};
         answerMap[result.answer_id].attachments = [];
     }
-    console.log("here 2.5");
+
     for (let i=0; i<questionCategoryjoin.length; i++) {
         let result = questionCategoryjoin[i];
         mySet.add(result.question_id);
@@ -350,7 +349,6 @@ exports.getQuestions = async function () {
         }
     }
 
-    console.log("here 3");
     for (let i=0; i<questionFileJoin.length; i++) {
         let result = questionFileJoin[i];
         if(result.file_id !== null) {
@@ -359,7 +357,6 @@ exports.getQuestions = async function () {
         }
     }
 
-    console.log("here 4");
     for (let i=0; i<answerFileJoin.length; i++) {
         let result = answerFileJoin[i];
         if(result.file_id !== null) {
@@ -369,7 +366,6 @@ exports.getQuestions = async function () {
         }
     }
 
-    console.log("here 5", answerMap);
     for (let i=0; i<questionAnswerjoin.length; i++) {
         let result = questionAnswerjoin[i];
         if(result.answer_id !== null) {
@@ -379,7 +375,6 @@ exports.getQuestions = async function () {
         }
     }
 
-    console.log("here 6");
     let payload = [];
     for (let item of mySet) {
         payload.push(map[item]);

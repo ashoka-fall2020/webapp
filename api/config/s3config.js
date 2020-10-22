@@ -12,5 +12,5 @@ if(process.env.NODE_ENV !== "production") {
 const s3= new AWS.S3();
 module.exports = {
     s3: s3,
-    bucketName:"eg-sample-bucket"
+    bucketName:process.env.S3BUCKETNAME
 };

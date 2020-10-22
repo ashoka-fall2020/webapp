@@ -28,6 +28,14 @@ exports.uploadFileForQuestion = function (request, response) {
         });
         return response;
     }
+    if(!request.file) {
+        response.status(400);
+        response.json({
+            status: 400,
+            message: "Bad Request"
+        });
+        return response;
+    }
     let credentials = auth(request);
     if(credentials === undefined) {
         response.status(401);
@@ -37,6 +45,7 @@ exports.uploadFileForQuestion = function (request, response) {
         });
         return response;
     }
+
     const file = {
         question_id: request.params.question_id,
         user_id: "",
@@ -281,6 +290,14 @@ exports.uploadFileForAnswer = function (request, response) {
                 message: "Bad Request"
             });
             return response;
+    }
+    if(!request.file) {
+        response.status(400);
+        response.json({
+            status: 400,
+            message: "Bad Request"
+        });
+        return response;
     }
     let credentials = auth(request);
     if(credentials === undefined) {

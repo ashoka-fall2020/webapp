@@ -23,7 +23,6 @@ exports.deleteAnswer = async function (answer_id) {
     let files = await File.findAll({
         where:{answer_id: answer_id}
     });
-    console.log ("files------", files);
     if (files !== null && files !== undefined && files.length > 0) {
         let objects = [];
         for(let k in files){
@@ -47,7 +46,6 @@ exports.deleteAnswer = async function (answer_id) {
 };
 
 exports.findAnswerByAnswerId = async function (answer_id) {
-    console.log("find answer ", answer_id);
     let out = {};
     let answer = await Answer.findOne({
         where:{answer_id: answer_id}

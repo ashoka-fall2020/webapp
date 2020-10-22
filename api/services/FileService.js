@@ -4,7 +4,6 @@ const db = require("../models");
 const File = db.file;
 
 exports.uploadFileForQuestion = async function (request, file) {
-    console.log("upload file for question");
     file.file_name = request.file.originalname;
     file.s3_object_name = request.file.filename;
     const params = {
@@ -22,7 +21,6 @@ exports.uploadFileForQuestion = async function (request, file) {
 };
 
 exports.uploadFileForAnswer = async function (request, file) {
-    console.log("upload file for answer");
     file.file_name = request.file.originalname;
     file.s3_object_name = request.file.filename;
     const params = {
