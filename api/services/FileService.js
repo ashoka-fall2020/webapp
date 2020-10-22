@@ -13,6 +13,10 @@ exports.uploadFileForQuestion = async function (request, file) {
     };
     const metaData = await s3.s3.headObject(params).promise();
     console.log(metaData);
+    file.accept_ranges = metaData.AcceptRanges;
+    file.content_length = metaData.ContentLength;
+    file.e_tag = metaData.ETag;
+    file.content_type = metaData.ContentType;
     const newFile = new File(file);
     return newFile.save();
 };
@@ -27,6 +31,10 @@ exports.uploadFileForAnswer = async function (request, file) {
     };
     const metaData = await s3.s3.headObject(params).promise();
     console.log(metaData);
+    file.accept_ranges = metaData.AcceptRanges;
+    file.content_length = metaData.ContentLength;
+    file.e_tag = metaData.ETag;
+    file.content_type = metaData.ContentType;
     const newFile = new File(file);
     return newFile.save();
 };
@@ -38,7 +46,6 @@ exports.uploadFileToS3 = function(request) {
         Key         :  request.file.filename,
         Body        :  fileData
     };
-    console.log("s3 success");
     return s3.s3.putObject(putParams).promise();
 };
 

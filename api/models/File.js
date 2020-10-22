@@ -23,6 +23,22 @@ module.exports = (sequelize, Sequelize) => {
         user_id: {
             type: Sequelize.STRING,
             allowNull: false
+        },
+        accept_ranges: {
+            type: Sequelize.STRING,
+            allowNull: false
+        },
+        content_length: {
+            type: Sequelize.STRING,
+            allowNull: false
+        },
+        e_tag: {
+            type: Sequelize.STRING,
+            allowNull: false
+        },
+        content_type: {
+            type: Sequelize.STRING,
+            allowNull: false
         }
     }, {
         createdAt: "created_date"

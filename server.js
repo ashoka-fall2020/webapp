@@ -6,7 +6,7 @@ const db = require("./api/models");
 function main () {
     const app = express();
     // set port, listen for requests
-    const PORT = process.env.PORT || 8080;
+    const PORT = process.env.PORT;
     app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}.`);
     });
@@ -30,9 +30,9 @@ function main () {
 
     db.sequelize.sync();
 
-     //db.sequelize.sync({ force: true }).then(() => {
-      //  console.log("Drop and re-sync db.");
-    //});
+    //  db.sequelize.sync({ force: true }).then(() => {
+    //    console.log("Drop and re-sync db.");
+    // });
 
 }
 

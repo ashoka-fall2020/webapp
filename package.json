@@ -4,7 +4,9 @@
   "description": "Assignment-2 of Network Structures and Cloud Computing",
   "main": "server.js",
   "scripts": {
-    "test": "mocha --reporter spec"
+    "test": "mocha --reporter spec",
+    "dev": "node server.js",
+    "prod": "NODE_ENV=production node server.js"
   },
   "repository": "https://github.com/ashokaparna/webapp",
   "author": "Aparna",
