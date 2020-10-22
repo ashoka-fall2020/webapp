@@ -53,7 +53,7 @@ exports.findAnswerByAnswerId = async function (answer_id) {
     if(answer !== null && answer !== undefined) {
         let attachments = await File.findAll({
             where:{answer_id: answer_id},
-            attributes: { exclude: ['updatedAt', 'question_id', 'answer_id', 'user_id'] }
+            attributes: { exclude: ['updatedAt', 'question_id', 'answer_id', 'user_id', 'e_tag', 'content_type', 'content_length', 'accept_ranges'] }
         });
         out.answer_id = answer.answer_id;
         out.answer_text = answer.answer_text;

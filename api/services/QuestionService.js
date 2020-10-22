@@ -243,7 +243,7 @@ exports.getQuestion = async function (question_id) {
     }
     let attachments = await File.findAll({
         where:{question_id: question_id, answer_id: null},
-        attributes: { exclude: ['updatedAt', 'question_id', 'answer_id', 'user_id'] }
+        attributes: { exclude: ['updatedAt', 'question_id', 'answer_id', 'user_id', 'e_tag', 'content_type', 'content_length', 'accept_ranges'] }
     });
     question.answers = answers;
     out.question_id = question.question_id;
