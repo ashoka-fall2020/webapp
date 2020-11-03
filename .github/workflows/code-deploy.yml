@@ -57,6 +57,7 @@ jobs:
         run: |
             output = $(aws deploy create-deployment \
               --application-name ${{env.CODEDEPLOY_APPLICATION_NAME }} \
+              --deployment-group-name ${{env.CODEDEPLOY_APPLICATION_GROUP_NAME }} \
               --region ${{env.AWS_REGION}} \
               --output json)
 
