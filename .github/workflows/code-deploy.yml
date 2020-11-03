@@ -1,7 +1,7 @@
 name: CICD
 
 env:
-  ARTIFACT_NAME: csye6225-webapp-${{github.GITHUB_SHA}}.zip
+  ARTIFACT_NAME: csye6225-webapp-${{ github.run_number }}.zip
   CODEDEPLOY_APPLICATION_NAME: csye6225-webap
   CODEDEPLOY_APPLICATION_GROUP_NAME: csye6225-webapp-deployment
   AWS_REGION: us-east-1
@@ -55,11 +55,13 @@ jobs:
 
       - name: Make CodeDeploy API call
         run: |
+          aws --version
+
           output = $(aws deploy create-deployment \
               --application-name ${{env.CODEDEPLOY_APPLICATION_NAME }} \
               --deployment-group-name ${{env.CODEDEPLOY_APPLICATION_GROUP_NAME }} \
               --deployment-config-name CodeDeployDefault.AllAtOnce \
-              --s3-location bucket=${{secrets.S3_CODE_DEPLOY_BUCKET}}, bundleType=zip, key=${{ env.ARTIFACT_NAME }} \
+              --s3-location "bucket=${{secrets.S3_CODE_DEPLOY_BUCKET}}, bundleType=zip, key=${{ env.ARTIFACT_NAME }}" \
               --output json)
 
               echo $output
