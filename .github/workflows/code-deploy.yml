@@ -55,11 +55,6 @@ jobs:
 
       - name: Make CodeDeploy API call
         run: |
-            aws deploy register-application-revision \
-            --application-name ${{env.CODEDEPLOY_APPLICATION_NAME }}
-            --s3-location bucket=$${secrets.S3_CODE_DEPLOY_BUCKET},
-              bundleType=zip,key=deployments/${{ env.ARTIFACT_NAME }}
-
             output = $(aws deploy create-deployment \
               --application-name ${{env.CODEDEPLOY_APPLICATION_NAME }} \
               --deployment-group-name ${{env.CODEDEPLOY_APPLICATION_GROUP_NAME }} \
