@@ -22,7 +22,7 @@ jobs:
         with:
           node-version: '12.x'
 
-      - run: npm run test
+      - run: npm test
       - run: rm -rf node_modules/
       - name: Zip Artifact
         run: |
@@ -46,7 +46,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v1
         with:
             aws-access-key-id: ${{secrets.AWS_ACCESS_KEY}}
-            aws-secret_access_key: ${{secrets.AWS_SECRET_KEY}}
+            aws-secret-access-key: ${{secrets.AWS_SECRET_KEY}}
             aws-region: ${{env.AWS_REGION}}
 
       - name: Upload Artifact to S3
