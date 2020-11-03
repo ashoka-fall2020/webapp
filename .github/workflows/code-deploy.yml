@@ -55,8 +55,6 @@ jobs:
 
       - name: Make CodeDeploy API call
         run: |
-          aws --version
-
           output = $(aws deploy create-deployment \
               --application-name ${{env.CODEDEPLOY_APPLICATION_NAME }} \
               --deployment-group-name ${{env.CODEDEPLOY_APPLICATION_GROUP_NAME }} \
