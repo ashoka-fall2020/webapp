@@ -64,6 +64,6 @@ jobs:
 
               echo $output
 
-              dId = $(echo $ouput | jq -r '.deploymentId')
+              dId = $(echo $ouput | jq .deploymentId)
 
               aws deploy wait deployment-successful --deployment-id $dId
