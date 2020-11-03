@@ -2,7 +2,7 @@ name: CICD
 
 env:
   ARTIFACT_NAME: csye6225-webapp-${{github.GITHUB_SHA}}.zip
-  CODEDEPLOY_APPLICATION_NAME: csye6225-webapp
+  CODEDEPLOY_APPLICATION_NAME: csye6225-webap
   CODEDEPLOY_APPLICATION_GROUP_NAME: csye6225-webapp-deployment
   AWS_REGION: us-east-1
 
