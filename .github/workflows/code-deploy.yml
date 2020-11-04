@@ -60,8 +60,7 @@ jobs:
               --deployment-group-name ${{env.CODEDEPLOY_APPLICATION_GROUP_NAME }} \
               --deployment-config-name CodeDeployDefault.AllAtOnce \
               --s3-location "bucket=${{secrets.S3_CODE_DEPLOY_BUCKET}}, bundleType=zip, key=${{ env.ARTIFACT_NAME }}" \
-              --region ${{env.AWS_REGION}}
-              --output json)
+              --region ${{env.AWS_REGION}})
               echo $output
               dId=$(echo $ouput | jq -r '.deploymentId')
               aws deploy wait deployment-successful --deployment-id $dId
