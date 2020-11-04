@@ -6,7 +6,7 @@ cd /home/ubuntu
 echo "home/ubuntu"
 ls -al
 cd webapp
-sudo stop server.js
+sudo pm2 stop server.js
 cd ..
 rm -rf webapp
 ls -al
