@@ -1,0 +1,77 @@
+name: CICD
+
+env:
+  ARTIFACT_NAME: csye6225-webapp-${{ github.run_number }}.zip
+  CODEDEPLOY_APPLICATION_NAME: csye6225-webapp
+  CODEDEPLOY_APPLICATION_GROUP_NAME: csye6225-webapp-deployment
+  AWS_REGION: us-east-1
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  ci_cd:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+      - run: npm install
+      - run: npm test
+      - run: rm -rf node_modules/
+      - name: Zip Artifact
+        run: |
+           pwd
+           cd ..
+           pwd
+           ls -al
+           mkdir -p codedeploy_artifact
+           zip -r ${{ env.ARTIFACT_NAME }} webapp
+           pwd
+           ls -al
+           mv  ${{ env.ARTIFACT_NAME }} codedeploy_artifact/
+           ls -al
+           pwd
+           cd codedeploy_artifact
+           ls -al
+           pwd
+           cd ..
+           pwd
+           ls -al
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+            aws-access-key-id: ${{secrets.AWS_ACCESS_KEY}}
+            aws-secret-access-key: ${{secrets.AWS_SECRET_KEY}}
+            aws-region: ${{env.AWS_REGION}}
+
+      - name: Upload Artifact to S3
+        run: |
+          pwd
+          cd ..
+          pwd
+          ls -al
+          aws s3 sync ./codedeploy_artifact s3://${{secrets.S3_CODE_DEPLOY_BUCKET}}
+
+      - name: Make CodeDeploy API call
+        run: |
+          output=$(aws deploy create-deployment \
+              --application-name ${{env.CODEDEPLOY_APPLICATION_NAME }} \
+              --deployment-group-name ${{env.CODEDEPLOY_APPLICATION_GROUP_NAME }} \
+              --deployment-config-name CodeDeployDefault.AllAtOnce \
+              --s3-location "bucket=${{secrets.S3_CODE_DEPLOY_BUCKET}}, bundleType=zip, key=${{ env.ARTIFACT_NAME }}" \
+              --region ${{env.AWS_REGION}} )
+
+              echo $output
+              echo "Fetching deploymentId"
+              dId=$(echo $output | jq -r '.deploymentId')
+              echo "Fetching deploymentId success"
+              echo $dId
+              aws deploy wait deployment-successful --deployment-id $dId
+
