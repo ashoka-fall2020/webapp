@@ -53,7 +53,7 @@ jobs:
 
       - name: Upload Artifact to S3
         run: |
-          aws s3 sync ./codedeploy_artifact s3://${{secrets.S3_CODE_DEPLOY_BUCKET}}
+          aws s3 sync codedeploy_artifact s3://${{secrets.S3_CODE_DEPLOY_BUCKET}}
 
       - name: Make CodeDeploy API call
         run: |
