@@ -69,7 +69,6 @@ jobs:
               --region ${{env.AWS_REGION}} )
 
               echo $output
-
               echo "Fetching deploymentId"
               dId=$(echo $output | jq -r '.deploymentId')
               echo "Fetching deploymentId success"
