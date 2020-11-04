@@ -4,7 +4,6 @@ cd /home/ubuntu
 ls -al
 echo "ls-al"
 pwd
-echo "pwd"
 sudo npm i pm2 -g
 cd webapp
 sudo cp /home/ubuntu/.env ./.env
