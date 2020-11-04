@@ -62,5 +62,6 @@ jobs:
               --s3-location "bucket=${{secrets.S3_CODE_DEPLOY_BUCKET}}, bundleType=zip, key=${{ env.ARTIFACT_NAME }}" \
               --region ${{env.AWS_REGION}})
               echo $output
-              dId=$(echo $ouput | jq .deploymentId)
+              dId=$(echo $ouput | jq -r '.deploymentId')
+              echo $dId
               aws deploy wait deployment-successful --deployment-id $dId
