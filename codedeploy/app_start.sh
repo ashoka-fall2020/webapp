@@ -8,5 +8,5 @@ sudo npm i pm2 -g
 cd webapp
 sudo cp /home/ubuntu/.env ./.env
 echo "starting webapp.."
-sudo pm2 node server.js
+sudo pm2 start server.js
 echo "webapp running.."
