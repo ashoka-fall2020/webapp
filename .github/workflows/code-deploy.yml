@@ -74,4 +74,4 @@ jobs:
               dId=$(echo $output | jq -r '.deploymentId')
               echo "Fetching deploymentId success"
               echo $dId
-              aws deploy wait deployment-successful --deployment-id $dId
+

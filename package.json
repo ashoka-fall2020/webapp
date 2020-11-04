@@ -6,7 +6,7 @@
   "scripts": {
     "test": "mocha --reporter spec",
     "dev": "node server.js",
-    "prod": "cp /home/ubuntu/.env  ./.env && NODE_ENV=production node server.js"
+    "prod": "sudo cp /home/ubuntu/.env  ./.env && NODE_ENV=production node server.js"
   },
   "repository": "https://github.com/ashokaparna/webapp",
   "author": "Aparna",
