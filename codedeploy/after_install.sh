@@ -8,4 +8,4 @@ cd webapp
 pwd
 echo "pwd"
 echo "inside webapp"
-npm install
+sudo npm install
