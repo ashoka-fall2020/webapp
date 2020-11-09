@@ -3,6 +3,7 @@ const emailValidator = require("email-validator");
 const passwordValidator = require("password-validator");
 const auth = require('basic-auth');
 const bcrypt = require("bcrypt");
+const logger = require('../config/winston');
 
 const {v4: uuidv4} = require("uuid");
 
@@ -25,6 +26,7 @@ exports.validateCreateUserRequest = function (request, response) {
             status: 400,
             message: "Bad Request: First name, last name, password, username can not be empty!"
         });
+        logger.error("Bad request: missing required item");
         return response;
     }
     if(request.body.account_created != null ||  request.body.account_updated != null || request.body.id != null) {
@@ -41,6 +43,7 @@ exports.validateCreateUserRequest = function (request, response) {
             status: 400,
             message: "Bad Request: Entered password does not meet the minimum standards"
         });
+        logger.error("Bad request: password error");
         return response;
     }
 
@@ -50,6 +53,7 @@ exports.validateCreateUserRequest = function (request, response) {
             status: 400,
             message: "Bad Request: Invalid email, username should be an email."
         });
+        logger.error("Bad request: invalid email");
         return response;
     }
     return null;
@@ -74,6 +78,7 @@ exports.create = function (request, response) {
             });
             return response;
         } else{
+            logger.info("no username found");
             userService.createAccount(user)
                 .then(handleCreateUserResponse)
                 .catch(handleDbError(response));
@@ -82,6 +87,7 @@ exports.create = function (request, response) {
 
     const handleCreateUserResponse = (signUpResponse) => {
         if (signUpResponse != null) {
+            logger.info("success sign up");
             response.json(getResponseUser(signUpResponse));
         } else {
             response.status(400);
@@ -101,6 +107,7 @@ exports.create = function (request, response) {
 const handleDbError = (response) => {
     const errorCallBack = (error) => {
         if (error) {
+            logger.error(error);
             response.status(400);
             response.json({
                 status: 400,
