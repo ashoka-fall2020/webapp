@@ -89,6 +89,7 @@ exports.create = function (request, response) {
 
     const handleCreateUserResponse = (signUpResponse) => {
         sdc.timing('createUser.timer', timer);
+        sdc.increment('createUser.counter');
         if (signUpResponse != null) {
             logger.info("success sign up");
             response.json(getResponseUser(signUpResponse));
@@ -274,7 +275,7 @@ exports.getByUserId = function(request, response) {
         };
         return apiResponse;
     };
-
+    sdc.increment('getUserByID.counter');
     userService.findUserByUserId(request.params.user_id)
         .then(handleResponse)
         .catch(handleDbError(response));
