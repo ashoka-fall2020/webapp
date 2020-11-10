@@ -4,6 +4,7 @@ const passwordValidator = require("password-validator");
 const auth = require('basic-auth');
 const bcrypt = require("bcrypt");
 const logger = require('../config/winston');
+const sdc = require('../config/statsd');
 
 const {v4: uuidv4} = require("uuid");
 
@@ -68,7 +69,7 @@ exports.create = function (request, response) {
         username: request.body.username,
         password: getPasswordHash(request.body.password)
     };
-
+    let timer = new Date();
     const handleFindByUserNameResponse = (usernameRes) => {
         if (usernameRes != null) {
             response.status(400);
@@ -78,6 +79,7 @@ exports.create = function (request, response) {
             });
             return response;
         } else{
+
             logger.info("no username found");
             userService.createAccount(user)
                 .then(handleCreateUserResponse)
@@ -86,6 +88,7 @@ exports.create = function (request, response) {
     };
 
     const handleCreateUserResponse = (signUpResponse) => {
+        sdc.timing('createUser.timer', timer);
         if (signUpResponse != null) {
             logger.info("success sign up");
             response.json(getResponseUser(signUpResponse));
