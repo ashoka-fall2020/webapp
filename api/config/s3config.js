@@ -1,6 +1,6 @@
 const AWS = require('aws-sdk');
 
-console.log("process.env.ENV1", process.env.NODE_ENV);
+console.log("process.env.NODE_ENV", process.env.NODE_ENV);
 if(process.env.NODE_ENV !== "production") {
     AWS.config.update({
         accessKeyId: process.env.ACCESSKEY,

@@ -1,5 +1,5 @@
-var winston = require('winston');
-var options = {
+const winston = require('winston');
+let options = {
     file: {
         level: 'info',
         filename: `/home/ubuntu/logs/webapp.log`,
@@ -25,7 +25,7 @@ const logFormat = winston.format.combine(
     ),
 );
 
-var logger = new winston.createLogger({
+let logger = new winston.createLogger({
     format : logFormat,
     transports: [
         new winston.transports.File(options.file),

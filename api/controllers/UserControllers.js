@@ -47,7 +47,6 @@ exports.validateCreateUserRequest = function (request, response) {
         logger.error("Bad request: password error");
         return response;
     }
-
     if(!emailValidator.validate(request.body.username)) {
         response.status(400);
         response.json({
@@ -79,7 +78,6 @@ exports.create = function (request, response) {
             });
             return response;
         } else{
-
             logger.info("no username found");
             userService.createAccount(user)
                 .then(handleCreateUserResponse)
@@ -89,8 +87,8 @@ exports.create = function (request, response) {
 
     const handleCreateUserResponse = (signUpResponse) => {
         sdc.timing('createUser.timer', timer);
-        sdc.increment('createUser.counter');
         if (signUpResponse != null) {
+            sdc.increment('createUser.counter');
             logger.info("success sign up");
             response.json(getResponseUser(signUpResponse));
         } else {
@@ -102,7 +100,6 @@ exports.create = function (request, response) {
             return response;
         }
     };
-
     userService.findUserByUserName(user.username)
         .then(handleFindByUserNameResponse)
         .catch(handleDbError(response));
@@ -125,6 +122,7 @@ const handleDbError = (response) => {
 
 exports.get = function(request, response) {
     const handleFindByUserNameResponse = (userResponse) => {
+        sdc.increment('getUserNameResponse.counter');
         if(userResponse != null && bcrypt.compareSync(credentials.pass, userResponse.password)) {
             response.json(getResponseUser(userResponse));
         } else{
@@ -252,6 +250,7 @@ exports.getByUserId = function(request, response) {
 
     const handleResponse = (userResponse) => {
         if(userResponse != null ) {
+            sdc.increment('getUserByID.counter');
             response.json(getUseryUserId(userResponse));
             return response;
         } else{
@@ -275,7 +274,6 @@ exports.getByUserId = function(request, response) {
         };
         return apiResponse;
     };
-    sdc.increment('getUserByID.counter');
     userService.findUserByUserId(request.params.user_id)
         .then(handleResponse)
         .catch(handleDbError(response));
