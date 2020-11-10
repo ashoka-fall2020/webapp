@@ -11,7 +11,7 @@ echo "starting cloud watch"
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
     -a fetch-config \
     -m ec2 \
-    -c file:/home/ubuntu/webapp/cloudwatch-agent-config.json \
+    -c file:/home/ubuntu/webapp/cloudwatch-config.json \
     -s
 echo "starting webapp"
 sudo pm2 start server.js

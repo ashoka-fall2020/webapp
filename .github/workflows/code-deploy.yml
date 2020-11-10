@@ -21,9 +21,9 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '12.x'
-      - run: npm install
-      - run: npm test
-      - run: rm -rf node_modules/
+      - run: sudo npm install
+      - run: sudo npm test
+      - run: sudo rm -rf node_modules/
       - name: Zip Artifact
         run: |
            pwd
