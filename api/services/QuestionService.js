@@ -7,11 +7,14 @@ const File = db.file;
 const Question_Category = db.question_category;
 const {v4: uuidv4} = require("uuid");
 const s3 = require('../config/s3config');
+const sdc = require('../config/statsd');
 
 exports.addQuestion = async function (question) {
     const newQuestion = new Question(question);
     console.log("incoming question", question);
+    let dbTimer = new Date();
     await newQuestion.save();
+    sdc.timing('addQuestionQuery.timer', dbTimer);
     let allCatRes = await Category.findAll({
         attributes: ["category"], raw: true
     });
@@ -33,7 +36,9 @@ exports.addQuestion = async function (question) {
                 category: cat
             });
         });
+        let catDbTimer = new Date();
         await Category.bulkCreate(records);
+        sdc.timing('createCategoriesQuery.timer', catDbTimer);
     }
     let allCats = await Category.findAll({
         where:{category: incomingCats},
@@ -47,25 +52,31 @@ exports.addQuestion = async function (question) {
             category_id: cat
         });
     });
+    let qcatDbTimer = new Date();
     await Question_Category.bulkCreate(records);
+    sdc.timing('createQuestionCategoriesQuery.timer', qcatDbTimer);
     return exports.getQuestion(question.question_id);
 };
 
 // This is for just fetching question without any categories
 exports.findQuestionById = function (id) {
+    let dbTimer = new Date();
     const promise = Question.findOne({
         where:{question_id: id}
     });
+    sdc.timing('findQuestionByIdQuery.timer', dbTimer);
     return promise;
 };
 
 
 exports.updateQuestion = function(question) {
+    let dbTimer = new Date();
     const promise = Question.update({
         question_text: question.question_text
     }, {
         where:{question_id: question.question_id}
     });
+    sdc.timing('updateQuestion.timer', dbTimer);
     return promise;
 };
 
@@ -102,7 +113,9 @@ exports.updateQuestionCategories = async function (question, categoriesInPayload
 
             });
         }
+        let qCatdbTimer = new Date();
         Category.bulkCreate(records).then(() => {
+            sdc.timing('createCategoryQuery.timer', qCatdbTimer);
             console.log("ia m in then");
             Question_Category.findAll({where:{question_id: question.question_id},raw: true})
                 .then((allCategoriesInQuestionCategoryDbForQuestion) => {
@@ -156,9 +169,11 @@ exports.updateQuestionCategories = async function (question, categoriesInPayload
 };
 
 exports.deleteQuestion = async function(question_id) {
+    let dbTimer = new Date();
     await Question_Category.destroy({
         where:{question_id: question_id}
     });
+    sdc.timing('deleteQuestion.timer', dbTimer);
     let files = await File.findAll({
         where:{question_id: question_id, answer_id: null},
     });
@@ -173,25 +188,34 @@ exports.deleteQuestion = async function(question_id) {
                 Objects: objects
             }
         };
+        let s3timer = new Date();
         await s3.s3.deleteObjects(options).promise();
+        sdc.timing('deleteQuestionS3ObjectDelete.timer', s3timer);
+         s3timer = new Date();
         await File.destroy({
             where:{question_id: question_id, answer_id: null}
         });
+        sdc.timing('deleteQuestionFileDbDeleteQuery.timer', s3timer);
     }
+    let timer = new Date();
     const promise = Question.destroy({
         where:{question_id: question_id}
     });
+    sdc.timing('deleteQuestionQuery.timer', timer);
     return promise;
 };
 
 exports.getQuestionByID = function (question_id) {
+    let timer = new Date();
     const promise = Question.get({
         where:{question_id: question_id}
     });
+    sdc.timing('getQuestionByIDQuery.timer', timer);
     return promise;
 };
 
 exports.getQuestion = async function (question_id) {
+    let timer = new Date();
     let out = {};
     let question = await Question.findOne({
         where:{question_id: question_id}
@@ -254,11 +278,12 @@ exports.getQuestion = async function (question_id) {
     out.categories = categories;
     out.answers = questionAnswers;
     out.attachments = attachments;
+    sdc.timing('getQuestionDetailsQuery.timer', timer);
     return out;
 };
 
 exports.getQuestions = async function () {
-
+    let timer = new Date();
     let qc = "SELECT " +
         "q.question_id, " +
         "q.question_text, " +
@@ -278,6 +303,7 @@ exports.getQuestions = async function () {
         "on " +
         "qc.category_id = c.category_id";
     let questCat = await db.sequelize.query(qc, { type: db.sequelize.QueryTypes.SELECT });
+    sdc.timing('getQuestionsQuery.timer', timer);
     console.log("questcat", questCat);
 
     let qf = "SELECT " +
@@ -293,7 +319,9 @@ exports.getQuestions = async function () {
         "on " +
         "q.question_id = f.question_id " +
         "and f.answer_id is NULL" ;
+    timer = new Date();
     let questFile = await db.sequelize.query(qf, { type: db.sequelize.QueryTypes.SELECT });
+    sdc.timing('getQuestionsQuestAndFileJoinQuery.timer', timer);
     console.log("questfile ", qf);
 
      let qa = "SELECT q.question_id, "+
@@ -302,8 +330,9 @@ exports.getQuestions = async function () {
     "a.answer_text, " +
     "a.created_timestamp,  " +
     "a.updated_timestamp FROM `questions` as q left join `answers` as a on q.question_id = a.question_id" ;
-
+    timer = new Date();
     let questAnswer = await db.sequelize.query(qa, { type: db.sequelize.QueryTypes.SELECT });
+    sdc.timing('getQuestionsQuestAndAnswerJoinQuery.timer', timer);
     let af = "SELECT " +
         "a.answer_id, "+
         "f.file_id, " +
@@ -316,8 +345,9 @@ exports.getQuestions = async function () {
         "`files` as f " +
         "on " +
         "a.answer_id = f.answer_id";
+    timer = new Date();
     let answerFile = await db.sequelize.query(af, { type: db.sequelize.QueryTypes.SELECT });
-
+    sdc.timing('getQuestionsAnswerAndFileJoinQuery.timer', timer);
     let map = new Map();
     let answerMap = new Map();
     let mySet = new Set();

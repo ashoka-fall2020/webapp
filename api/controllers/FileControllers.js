@@ -5,10 +5,13 @@ const answerService = require("../services/AnswerService");
 const {v4: uuidv4} = require("uuid");
 const auth = require('basic-auth');
 const bcrypt = require("bcrypt");
+const sdc = require('../config/statsd');
+const logger = require('../config/winston');
 
 const handleDbError = (response) => {
     const errorCallBack = (error) => {
         if (error) {
+            logger.error(error);
             response.status(400);
             response.json({
                 status: 400,
@@ -20,7 +23,11 @@ const handleDbError = (response) => {
 };
 
 exports.uploadFileForQuestion = function (request, response) {
+    let apiTimer = new Date();
+    let s3Timer;
+    sdc.increment('uploadFileForQuestion.counter');
     if(!request.params.question_id) {
+        logger.info("Bad request");
         response.status(400);
         response.json({
             status: 400,
@@ -29,6 +36,7 @@ exports.uploadFileForQuestion = function (request, response) {
         return response;
     }
     if(!request.file) {
+        logger.info("Bad request");
         response.status(400);
         response.json({
             status: 400,
@@ -38,6 +46,7 @@ exports.uploadFileForQuestion = function (request, response) {
     }
     let credentials = auth(request);
     if(credentials === undefined) {
+        logger.info("Authentication error");
         response.status(401);
         response.json({
             status: 401,
@@ -55,13 +64,16 @@ exports.uploadFileForQuestion = function (request, response) {
     };
 
     const handleSuccess = (result) => {
+        sdc.timing('uploadFileForQuestionAPI.timer', apiTimer);
         if(result === undefined || result === null)  {
+            logger.info("S3 upload failed");
             response.status(400);
             response.json({
                 status: 400,
                 message: "S3 upload failed"
             });
         } else{
+            logger.info("S3 upload successful");
             response.status(200);
             response.json({
                 status: 200,
@@ -72,7 +84,9 @@ exports.uploadFileForQuestion = function (request, response) {
     };
 
     const s3UploadSuccessResponse = (result) => {
+        sdc.timing('questionFileS3Upload.timer', s3Timer);
         if(result === undefined || result === null)  {
+            logger.info("S3 successful");
             response.status(400);
             response.json({
                 status: 400,
@@ -89,12 +103,12 @@ exports.uploadFileForQuestion = function (request, response) {
     const handleQuestionResponse = (dbQuestion) => {
         if (dbQuestion != null) {
             if(dbQuestion.user_id === file.user_id) {
-                //upload file
-                console.log("upload file");
+                s3Timer = new Date();
                 fileService.uploadFileToS3(request)
                     .then(s3UploadSuccessResponse)
                     .catch(handleDbError(response));
             } else{
+                logger.info("Authentication error");
                 response.status(401);
                 response.json({
                     status: 401,
@@ -103,6 +117,7 @@ exports.uploadFileForQuestion = function (request, response) {
                 return response;
             }
         } else {
+            logger.info("Question not found");
             response.status(404);
             response.json({
                 status: 404,
@@ -120,6 +135,7 @@ exports.uploadFileForQuestion = function (request, response) {
                     .then(handleQuestionResponse)
                     .catch(handleDbError(response));
             } else {
+                logger.info("Authentication error");
                 response.status(401);
                 response.json({
                     status: 401,
@@ -133,7 +149,11 @@ exports.uploadFileForQuestion = function (request, response) {
 };
 
 exports.deleteFileForQuestion = function (request, response) {
+    let apiTimer = new Date();
+    let s3Timer;
+    sdc.increment('deleteFileForQuestion.counter');
     if(!request.params.question_id) {
+        logger.info("Question not found");
         response.status(400);
         response.json({
             status: 400,
@@ -142,6 +162,7 @@ exports.deleteFileForQuestion = function (request, response) {
         return response;
     }
     if(!request.params.file_id) {
+        logger.info("File not found");
         response.status(400);
         response.json({
             status: 400,
@@ -151,6 +172,7 @@ exports.deleteFileForQuestion = function (request, response) {
     }
     let credentials = auth(request);
     if(credentials === undefined) {
+        logger.info("Authentication error");
         response.status(401);
         response.json({
             status: 401,
@@ -168,14 +190,16 @@ exports.deleteFileForQuestion = function (request, response) {
     };
 
     const deleteFileSuccess = (result) => {
+        sdc.timing('deleteFileForQuestionAPI.timer', apiTimer);
         if(result !== null) {
-            console.log(" file delete success");
+            logger.info("file delete success");
             response.status(200);
             response.json({
                 status: 200,
                 message: "File deleted successfully"
             });
         } else {
+            logger.info("Error in deleting file");
             response.status(400);
             response.json({
                 status: 400,
@@ -186,12 +210,14 @@ exports.deleteFileForQuestion = function (request, response) {
     };
 
     const deleteFileS3Success = (result) => {
+        sdc.timing('deleteFileForQuestionS3.timer', s3Timer);
         if(result !== null) {
-            console.log("delete s3 success");
+            logger.info("delete s3 success");
             fileService.deleteFileDetails(tempFile)
                 .then(deleteFileSuccess)
                 .catch(handleDbError(response));
         } else {
+            logger.info("Error in deleting file");
             response.status(400);
             response.json({
                 status: 400,
@@ -207,10 +233,12 @@ exports.deleteFileForQuestion = function (request, response) {
                 // delete file from s3 and db;
                 tempFile = dbFile;
                 console.log("dbFile", dbFile);
+                s3Timer = new Date();
                 fileService.deleteFileFromS3(dbFile)
                     .then(deleteFileS3Success)
                     .catch(handleDbError(response));
             } else{
+                logger.info("File not found");
                 response.status(404);
                 response.json({
                     status: 404,
@@ -219,6 +247,7 @@ exports.deleteFileForQuestion = function (request, response) {
                 return response;
             }
         } else{
+            logger.info("File not found");
             response.status(404);
             response.json({
                 status: 404,
@@ -237,6 +266,7 @@ exports.deleteFileForQuestion = function (request, response) {
                     .then(getFileSuccess)
                     .catch(handleDbError(response));
             } else{
+                logger.info("Authentication error");
                 response.status(401);
                 response.json({
                     status: 401,
@@ -245,6 +275,7 @@ exports.deleteFileForQuestion = function (request, response) {
                 return response;
             }
         } else {
+            logger.info("Question not found");
             response.status(404);
             response.json({
                 status: 404,
@@ -262,6 +293,7 @@ exports.deleteFileForQuestion = function (request, response) {
                     .then(handleQuestionResponse)
                     .catch(handleDbError(response));
             } else{
+                logger.info("Authentication error");
                 response.status(401);
                 response.json({
                     status: 401,
@@ -275,7 +307,11 @@ exports.deleteFileForQuestion = function (request, response) {
 };
 
 exports.uploadFileForAnswer = function (request, response) {
+    let apiTimer = new Date();
+    let s3Timer;
+    sdc.increment('uploadFileForAnswer.counter');
     if(!request.params.question_id) {
+        logger.info("Bad Request");
         response.status(400);
         response.json({
             status: 400,
@@ -284,6 +320,7 @@ exports.uploadFileForAnswer = function (request, response) {
         return response;
     }
     if(!request.params.answer_id) {
+            logger.info("Bad Request");
             response.status(400);
             response.json({
                 status: 400,
@@ -292,6 +329,7 @@ exports.uploadFileForAnswer = function (request, response) {
             return response;
     }
     if(!request.file) {
+        logger.info("Bad Request");
         response.status(400);
         response.json({
             status: 400,
@@ -301,6 +339,7 @@ exports.uploadFileForAnswer = function (request, response) {
     }
     let credentials = auth(request);
     if(credentials === undefined) {
+        logger.info("Authentication error");
         response.status(401);
         response.json({
             status: 401,
@@ -318,13 +357,16 @@ exports.uploadFileForAnswer = function (request, response) {
     };
 
     const handleSuccess = (result) => {
+        sdc.timing('uploadFileForAnswerAPI.timer', apiTimer);
         if(result === undefined || result === null)  {
+            logger.info("S3 upload failed");
             response.status(400);
             response.json({
                 status: 400,
                 message: "S3 upload failed"
             });
         } else{
+            logger.info("File uploaded successfully");
             response.status(200);
             response.json({
                 status: 200,
@@ -335,7 +377,9 @@ exports.uploadFileForAnswer = function (request, response) {
     };
 
     const s3UploadSuccessResponse = (result) => {
+        sdc.timing('answerFileS3Upload.timer', s3Timer);
             if(result === undefined || result === null)  {
+                logger.info("S3 upload failed");
                 response.status(400);
                 response.json({
                     status: 400,
@@ -354,10 +398,12 @@ exports.uploadFileForAnswer = function (request, response) {
             if (dbAnswer.question_id === request.params.question_id && dbAnswer.user_id === file.user_id) {
                 file.question_id = dbAnswer.question_id;
                 file.answer_id = dbAnswer.answer_id;
+                s3Timer = new Date();
                 fileService.uploadFileToS3(request)
                     .then(s3UploadSuccessResponse)
                     .catch(handleDbError(response));
             } else{
+                logger.info("Authentication error");
                 response.status(401);
                 response.json({
                     status: 401,
@@ -366,6 +412,7 @@ exports.uploadFileForAnswer = function (request, response) {
                 return response;
             }
         } else {
+            logger.info("Answer not found");
             response.status(404);
             response.json({
                 status: 404,
@@ -384,6 +431,7 @@ exports.uploadFileForAnswer = function (request, response) {
                     .then(getAnswerResponse)
                     .catch(handleDbError(response));
             } else {
+                logger.info("Authentication error");
                 response.status(401);
                 response.json({
                     status: 401,
@@ -396,7 +444,11 @@ exports.uploadFileForAnswer = function (request, response) {
 };
 
 exports.deleteFileForAnswer = function (request, response) {
+    let apiTimer = new Date();
+    let s3Timer;
+    sdc.increment('deleteFileForAnswer.counter');
     if(!request.params.question_id) {
+        logger.info("Bad Request");
         response.status(400);
         response.json({
             status: 400,
@@ -405,6 +457,7 @@ exports.deleteFileForAnswer = function (request, response) {
         return response;
     }
     if(!request.params.answer_id) {
+            logger.info("Bad Request");
             response.status(400);
             response.json({
                 status: 400,
@@ -414,6 +467,7 @@ exports.deleteFileForAnswer = function (request, response) {
     }
     let credentials = auth(request);
      if(credentials === undefined) {
+         logger.info("Authentication error");
          response.status(401);
          response.json({
              status: 401,
@@ -432,7 +486,9 @@ exports.deleteFileForAnswer = function (request, response) {
     };
 
     const deleteFileSuccess = (result) => {
+        sdc.timing('deleteFileForAnswerAPI.timer', apiTimer);
         if(result !== null) {
+            logger.info("file delete success");
             console.log(" file delete success");
             response.status(200);
             response.json({
@@ -440,6 +496,7 @@ exports.deleteFileForAnswer = function (request, response) {
                 message: "File deleted successfully"
             });
         } else {
+            logger.info("Error in deleting file");
             response.status(400);
             response.json({
                 status: 400,
@@ -450,12 +507,14 @@ exports.deleteFileForAnswer = function (request, response) {
     };
 
     const deleteFileS3Success = (result) => {
+        sdc.timing('deleteFileForAnswerS3.timing', s3Timer);
         if(result !== null) {
             console.log("delete s3 success");
             fileService.deleteFileDetails(tempFile)
                 .then(deleteFileSuccess)
                 .catch(handleDbError(response));
         } else {
+            logger.info("Error in deleting file");
             response.status(400);
             response.json({
                 status: 400,
@@ -472,10 +531,12 @@ exports.deleteFileForAnswer = function (request, response) {
                 // delete file from s3 and db;
                 tempFile = dbFile;
                 console.log("dbFile", dbFile);
+                s3Timer = new Date();
                 fileService.deleteFileFromS3(dbFile)
                     .then(deleteFileS3Success)
                     .catch(handleDbError(response));
             } else{
+                logger.info("File not found");
                 response.status(404);
                 response.json({
                     status: 404,
@@ -484,6 +545,7 @@ exports.deleteFileForAnswer = function (request, response) {
                 return response;
             }
         } else{
+            logger.info("File not found");
             response.status(404);
             response.json({
                 status: 404,
@@ -501,6 +563,7 @@ exports.deleteFileForAnswer = function (request, response) {
                     .then(getFileSuccess)
                     .catch(handleDbError(response));
             } else{
+                logger.info("Authentication error");
                 response.status(401);
                 response.json({
                     status: 401,
@@ -509,6 +572,7 @@ exports.deleteFileForAnswer = function (request, response) {
                 return response;
             }
         } else {
+            logger.info("Answer not found");
             response.status(404);
             response.json({
                 status: 404,
@@ -527,6 +591,7 @@ exports.deleteFileForAnswer = function (request, response) {
                     .then(getAnswerResponse)
                     .catch(handleDbError(response));
             } else {
+                logger.info("Authentication error");
                 response.status(401);
                 response.json({
                     status: 401,
