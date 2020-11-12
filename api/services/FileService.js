@@ -2,6 +2,7 @@ const fs = require('fs');
 const s3 = require('../config/s3config');
 const db = require("../models");
 const File = db.file;
+const sdc = require('../config/statsd');
 
 exports.uploadFileForQuestion = async function (request, file) {
     file.file_name = request.file.originalname;
@@ -17,7 +18,10 @@ exports.uploadFileForQuestion = async function (request, file) {
     file.e_tag = metaData.ETag;
     file.content_type = metaData.ContentType;
     const newFile = new File(file);
-    return newFile.save();
+    let timer = new Date();
+    const promise = newFile.save();
+    sdc.timing('saveFileForQuestionQuery.timer', timer);
+    return promise;
 };
 
 exports.uploadFileForAnswer = async function (request, file) {
@@ -34,7 +38,10 @@ exports.uploadFileForAnswer = async function (request, file) {
     file.e_tag = metaData.ETag;
     file.content_type = metaData.ContentType;
     const newFile = new File(file);
-    return newFile.save();
+    let timer = new Date();
+    const promise = newFile.save();
+    sdc.timing('saveFileForAnswerQuery.timer', timer);
+    return promise;
 };
 
 exports.uploadFileToS3 = function(request) {
@@ -48,9 +55,11 @@ exports.uploadFileToS3 = function(request) {
 };
 
 exports.getFileDetails = function(request) {
+    let timer = new Date();
     const promise = File.findOne({
         where:{file_id: request.params.file_id}
     });
+    sdc.timing('getFileDetailsQuery.timer', timer);
     return promise;
 };
 
@@ -63,8 +72,10 @@ exports.deleteFileFromS3 = function(file) {
 };
 
 exports.deleteFileDetails = function(file) {
+    let timer = new Date();
     const promise = File.destroy({
         where:{file_id: file.file_id}
     });
+    sdc.timing('deleteFileDetailsQuery.timer', timer);
     return promise;
 };

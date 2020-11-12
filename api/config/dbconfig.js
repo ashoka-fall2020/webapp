@@ -1,4 +1,3 @@
-console.log("process.env.ENV2", process.env.ENV);
 require('dotenv').config();
 module.exports = {
     HOST: process.env.DATABASE_HOST_NAME,

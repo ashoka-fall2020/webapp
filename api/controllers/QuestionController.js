@@ -5,10 +5,13 @@ const answerService = require("../services/AnswerService");
 const {v4: uuidv4} = require("uuid");
 const auth = require('basic-auth');
 const bcrypt = require("bcrypt");
+const logger = require('../config/winston');
+const sdc = require('../config/statsd');
 
 const handleDbError = (response) => {
     const errorCallBack = (error) => {
         if (error) {
+            logger.error(error);
             response.status(400);
             response.json({
                 status: 400,
@@ -20,7 +23,10 @@ const handleDbError = (response) => {
 };
 
 exports.addQuestion = function (request, response) {
+    let apiTimer = new Date();
+    sdc.increment('addQuestion.counter');
     if(request.body.question_text === null || request.body.question_text === undefined || request.body.categories === undefined || request.body.question_text.length === 0) {
+        logger.info("Bad request");
         response.status(400);
         response.json({
             status: 400,
@@ -38,6 +44,7 @@ exports.addQuestion = function (request, response) {
 
     let credentials = auth(request);
     if(credentials === undefined) {
+        logger.info("Authentication error");
         response.status(401);
         response.json({
             status: 401,
@@ -49,6 +56,7 @@ exports.addQuestion = function (request, response) {
         request.body.categories.forEach(cat => {
             if(cat === undefined || cat === null || cat.category === null || cat.category.length === 0) {
                 returnEarly = true;
+                logger.info("Category cannot be empty");
                 response.status(400);
                 response.json({
                     status: 400,
@@ -68,12 +76,16 @@ exports.addQuestion = function (request, response) {
                     question.categories = request.body.categories;
                     questionService.addQuestion(question)
                         .then((successResponse) => {
+                            sdc.timing('addQuestion.timer', apiTimer);
                             if(successResponse !== null) {
+                                logger.info("Add question success");
                                 response.status(200);
                                 response.json(successResponse);
                                 return response;
                             }
                             else{
+                                sdc.timing('addQuestion.timer', apiTimer);
+                                logger.info("Resource not found");
                                 response.status(400);
                                 response.json({
                                     status: 400,
@@ -85,6 +97,7 @@ exports.addQuestion = function (request, response) {
                         })
                         .catch(handleDbError(response));
                 } else{
+                    logger.info("Authentication error");
                     response.status(401);
                     response.json({
                         status: 401,
@@ -98,7 +111,10 @@ exports.addQuestion = function (request, response) {
 };
 
 exports.updateQuestion = function (request, response) {
+    let apiTimer = new Date();
+    sdc.increment('updateQuestion.counter');
     if(request.body.question_text === null || request.body.question_text === undefined || request.body.categories === undefined || request.body.question_text.length === 0) {
+        logger.info("Bad request");
         response.status(400);
         response.json({
             status: 400,
@@ -107,6 +123,7 @@ exports.updateQuestion = function (request, response) {
         return response;
     }
     if(!request.params.question_id) {
+        logger.info("Bad request");
         response.status(400);
         response.json({
             status: 400,
@@ -122,6 +139,7 @@ exports.updateQuestion = function (request, response) {
     };
 
     const updateCatResponse = (updateResponse) => {
+        logger.info("Update success");
         response.status(204);
         response.json({
             status: 204,
@@ -131,10 +149,12 @@ exports.updateQuestion = function (request, response) {
     };
 
     const updateQuestionCategories = (updatedQuestion) => {
+        sdc.timing('updateQuestion.timer', apiTimer);
         if (updatedQuestion != null) {
             if(request.body.categories !== undefined) {
                 request.body.categories.forEach(cat => {
                     if(cat === undefined || cat === null || cat.category === null || cat.category.length === 0) {
+                        logger.info("Category cannot be empty");
                         response.status(400);
                         response.json({
                             status: 400,
@@ -148,6 +168,7 @@ exports.updateQuestion = function (request, response) {
                     .then(updateCatResponse)
                     .catch(handleDbError(response));
             } else{
+                logger.info("Update success");
                 response.status(204);
                 response.json({
                     status: 204,
@@ -156,6 +177,7 @@ exports.updateQuestion = function (request, response) {
                 return response;
             }
         } else {
+            logger.info("Question not found");
             response.status(404);
             response.json({
                 status: 404,
@@ -173,6 +195,7 @@ exports.updateQuestion = function (request, response) {
                    .then(updateQuestionCategories)
                    .catch(handleDbError(response));
            } else{
+               logger.info("Authentication error");
                response.status(401);
                response.json({
                    status: 401,
@@ -181,6 +204,7 @@ exports.updateQuestion = function (request, response) {
                return response;
            }
         } else {
+            logger.info("Question not found");
             response.status(404);
             response.json({
                 status: 404,
@@ -191,6 +215,7 @@ exports.updateQuestion = function (request, response) {
     } ;
     let userCredentials = auth(request);
     if(userCredentials === undefined) {
+        logger.info("Authentication error");
         response.status(401);
         response.json({
             status: 401,
@@ -207,6 +232,7 @@ exports.updateQuestion = function (request, response) {
                         .then(handleQuestionResponse)
                         .catch(handleDbError(response));
                 } else{
+                    logger.info("Authentication error");
                     response.status(401);
                     response.json({
                         status: 401,
@@ -220,7 +246,10 @@ exports.updateQuestion = function (request, response) {
 };
 
 exports.deleteQuestion = function (request, response) {
+    let apiTimer = new Date();
+    sdc.increment('deleteQuestion.counter');
     if(!request.params.question_id) {
+        logger.info("deleteQuestion: Bad Request");
         response.status(400);
         response.json({
             status: 400,
@@ -230,7 +259,9 @@ exports.deleteQuestion = function (request, response) {
     }
 
     const deleteQResponse = (deleteRes) => {
+        sdc.timing('deleteQuestion.timer', apiTimer);
         if(deleteRes != null) {
+            logger.info("Delete Question Success");
             response.status(204);
             response.json({
                 status: 204,
@@ -238,6 +269,7 @@ exports.deleteQuestion = function (request, response) {
             });
             return response;
         } else{
+            logger.info("Not found");
             response.status(404);
             response.json({
                 status: 404,
@@ -252,6 +284,7 @@ exports.deleteQuestion = function (request, response) {
                 .then(deleteQResponse)
                 .catch(handleDbError(response));
         }else{
+            logger.info("Questions with multiple answers cannot be deleted");
             response.status(400);
             response.json({
                 status: 400,
@@ -270,6 +303,7 @@ exports.deleteQuestion = function (request, response) {
                     .then(allAnswerResponse)
                     .catch(handleDbError(response));
             } else{
+                logger.info("Authentication error");
                 response.status(401);
                 response.json({
                     status: 401,
@@ -278,6 +312,7 @@ exports.deleteQuestion = function (request, response) {
                 return response;
             }
         } else {
+            logger.info("Not found");
             response.status(404);
             response.json({
                 status: 404,
@@ -288,6 +323,7 @@ exports.deleteQuestion = function (request, response) {
     } ;
     let userCredentials = auth(request);
     if(userCredentials === undefined) {
+        logger.info("Authentication error");
         response.status(401);
         response.json({
             status: 401,
@@ -304,6 +340,7 @@ exports.deleteQuestion = function (request, response) {
                         .then(handleGetSingleQuestionResponse)
                         .catch(handleDbError(response));
                 } else{
+                    logger.info("Authentication error");
                     response.status(401);
                     response.json({
                         status: 401,
@@ -317,7 +354,10 @@ exports.deleteQuestion = function (request, response) {
 };
 
 exports.getQuestionById = function (request, response) {
+    let apiTimer = new Date();
+    sdc.increment('getQuestionById.counter');
     if(!request.params.question_id) {
+        logger.info("Bad Request");
         response.status(400);
         response.json({
             status: 400,
@@ -327,11 +367,14 @@ exports.getQuestionById = function (request, response) {
     }
 
     const getResponse = (questionRes) => {
+        sdc.timing('getQuestion.timer', apiTimer);
         if(questionRes !== null) {
+            logger.info("Get Question Success");
             response.status(200);
             response.json(questionRes);
             return response;
         } else{
+            logger.info("Bad Request");
             response.status(400);
             response.json({
                 status: 400,
@@ -347,6 +390,7 @@ exports.getQuestionById = function (request, response) {
                 .then(getResponse)
                 .catch(handleDbError(response));
         } else{
+            logger.info("Question not found");
             response.status(404);
             response.json({
                 status: 404,
@@ -362,12 +406,17 @@ exports.getQuestionById = function (request, response) {
 };
 
 exports.getQuestions = function (request, response) {
+    let apiTimer = new Date();
+    sdc.increment('getQuestions.counter');
     const questionsRes = (questionRes) => {
+        sdc.timing('getQuestions.timer', apiTimer);
         if(questionRes !== null) {
+            logger.info("Get Questions Success");
             response.status(200);
             response.json(questionRes);
             return response;
         } else{
+            logger.info("Bad request");
             response.status(400);
             response.json({
                 status: 400,
