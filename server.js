@@ -2,7 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const db = require("./api/models");
-const logger = require('../config/winston');
+const logger = require('./api/config/winston');
 
 function main () {
     const app = express();
