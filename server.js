@@ -6,7 +6,7 @@ const logger = require('../config/winston');
 
 function main () {
     const app = express();
-    logger.info("Application start");
+    logger.info("Application start.....");
     // set port, listen for requests
     const PORT = process.env.PORT || 8080;
     app.listen(PORT, () => {
