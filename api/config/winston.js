@@ -1,4 +1,7 @@
 const winston = require('winston');
+const os = require("os");
+
+let hostname = os.hostname();
 let options = {
     file: {
         level: 'info',
@@ -21,7 +24,7 @@ const logFormat = winston.format.combine(
     winston.format.timestamp(),
     winston.format.align(),
     winston.format.printf(
-        info => `TIMESTAMP: ${info.timestamp}, LEVEL:  ${info.level}, MESSAGE: ${info.message}`
+        info => `HOST: ${hostname}, TIMESTAMP: ${info.timestamp}, LEVEL:  ${info.level}, MESSAGE: ${info.message}`
     ),
 );
 
