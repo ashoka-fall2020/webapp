@@ -1,4 +1,4 @@
-#  WEB APPLICATION
+# WEB APPLICATION
 
 ##  Project Description:
 A backend application using NodeJs framework and MySQL database.
