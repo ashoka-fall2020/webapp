@@ -9,7 +9,7 @@ env:
 on:
   push:
     branches:
-      - master
+      - a9
 
 jobs:
   ci_cd:
