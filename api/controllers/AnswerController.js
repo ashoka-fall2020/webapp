@@ -56,9 +56,9 @@ exports.addAnswer = function (request, response) {
         sdc.timing('createAnswerAPI.timer', apiTimer);
         if(answerResponse != null) {
             logger.info("Create answer success");
+            sendSNSMessage(userCredentials.name, request.params.question_id, answerResponse);
             response.status(200);
             response.json(answerResponse);
-            sendSNSMessage(userCredentials.name, request.params.question_id, answerResponse);
             return response;
         } else{
             logger.info("Failed to save answer to db");
@@ -399,10 +399,11 @@ exports.getAnswer = function (request, response) {
 };
 
 exports.sendSNSMessage = function (email, question_id, answer) {
-        let message = "QuestionId: "  + question_id + "posted by " + email + "just got answered. \n AnswerId: " + answer.answer_id +
+        logger.info("Sending sns.......................");
+        let message = "QuestionId: "  + question_id + "posted by " + email + "just got answered. AnswerId: " + answer.answer_id +
         "Text: " + answer.answer_text + "Please click here to view your question: "
-        + "api.dev.aashok.me/v1/"+question_id + "\n  Please click here to view your answer:  api.dev.aashok.me/v1/" +question_id +"/answer/"+answer_id ;
-        logger.info(message);
+        + "api.dev.aashok.me/v1/"+question_id + "Please click here to view your answer:  api.dev.aashok.me/v1/" +question_id +"/answer/"+answer_id ;
+        logger.info("SNS MESSAGE -----------------", message);
         let params = {
             Email: email,
             Message: message,
