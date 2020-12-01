@@ -59,7 +59,7 @@ exports.addAnswer = function (request, response) {
             response.json(answerResponse);
             logger.info("Create answer success");
             logger.info("Constructing message.......................");
-            logger.info("question-id", answerResponse.question_id);
+            logger.info("question-id" + answerResponse.question_id);
             let userEmail = getEmailOfQuestionUser(answerResponse.question_id);
             let message = "QuestionId: "  + answerResponse.question_id + " posted by " + userEmail + " just got answered. AnswerId: " + answerResponse.answer_id +
                 " Text: " + answerResponse.answer_text + " Please click here to view your question: "
@@ -463,9 +463,10 @@ exports.getAnswer = function (request, response) {
 };
 
 function getEmailOfQuestionUser(question_id) {
-    questionService.getQuestionByID(question_id)
+    logger.info("questionid----"+question_id);
+    questionService.getQuestion(question_id)
         .then((question) => {
-            logger.info("question----", question)
+            logger.info("question----"+question);
             userService.findUserByUserId(question.user_id)
                 .then((user) => {
                     return user.email;
