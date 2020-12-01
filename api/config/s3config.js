@@ -7,6 +7,10 @@ if(process.env.NODE_ENV !== "production") {
         secretAccessKey: process.env.SECRETACCESSKEY,
         region: process.env.S3REGION,
     });
+} else {
+    AWS.config.update({
+        region: 'us-east-1'
+    });
 }
 
 const s3= new AWS.S3();

@@ -59,9 +59,9 @@ exports.addAnswer = function (request, response) {
             response.json(answerResponse);
             logger.info("Create answer success");
             logger.info("Sending sns.......................");
-            let message = "QuestionId: "  + answerResponse.question_id + "posted by " + userCredentials.name + "just got answered. AnswerId: " + answerResponse.answer_id +
-                "Text: " + answerResponse.answer_text + "Please click here to view your question: "
-                + "api.dev.aashok.me/v1/"+answerResponse.question_id + "Please click here to view your answer:  api.dev.aashok.me/v1/" +answerResponse.question_id +"/answer/"+answerResponse.answer_id ;
+            let message = "QuestionId: "  + answerResponse.question_id + " posted by " + userCredentials.name + " just got answered. AnswerId: " + answerResponse.answer_id +
+                " Text: " + answerResponse.answer_text + " Please click here to view your question: "
+                + "api.dev.aashok.me/v1/question/"+answerResponse.question_id + " Please click here to view your answer:  api.dev.aashok.me/v1/question/" +answerResponse.question_id +"/answer/"+answerResponse.answer_id ;
             logger.info("SNS MESSAGE -----" + message);
             let payload = {
                 default: 'Hello World',
