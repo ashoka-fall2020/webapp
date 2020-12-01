@@ -35,9 +35,9 @@ exports.updateUserDetails = function(request, userResponse) {
 };
 
 
-exports.findUserByUserId = function (user_id) {
+exports.findUserByUserId = async function (user_id) {
     let dbTimer = new Date();
-    const promise = User.findOne({
+    const promise = await User.findOne({
         where:{id: user_id}
     });
     sdc.timing('findUserByUserId.timer', dbTimer);

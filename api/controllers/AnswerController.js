@@ -59,6 +59,7 @@ exports.addAnswer = function (request, response) {
             response.json(answerResponse);
             logger.info("Create answer success");
             logger.info("Constructing message.......................");
+            logger.info("question-id", answerResponse.question_id);
             let userEmail = getEmailOfQuestionUser(answerResponse.question_id);
             let message = "QuestionId: "  + answerResponse.question_id + " posted by " + userEmail + " just got answered. AnswerId: " + answerResponse.answer_id +
                 " Text: " + answerResponse.answer_text + " Please click here to view your question: "
@@ -164,7 +165,7 @@ exports.updateAnswer = function (request, response) {
         });
         return;
     }
-
+    let tempAnswer;
     const handleUpdateResponse = (updateAnswer) => {
         sdc.timing('updateAnswerAPI.timer', apiTimer);
         if(updateAnswer != null) {
@@ -175,12 +176,13 @@ exports.updateAnswer = function (request, response) {
                 message: "Answer updated successfully"
             });
             logger.info("Constructing message.......................");
-            let userEmail = getEmailOfQuestionUser(updateAnswer.question_id);
-            let message = "QuestionId: "  + updateAnswer.question_id + " posted by " + userEmail + ". AnswerId: " + updateAnswer.answer_id +
-                " Text: " + updateAnswer.answer_text + " Please click here to view your question: "
-                + "http://api.dev.aashok.me/v1/question/"+updateAnswer.question_id + " Please click here to view your answer:  http://api.dev.aashok.me/v1/question/"
-                + updateAnswer.question_id
-                +"/answer/"+updateAnswer.answer_id ;
+            logger.info("question-id", tempAnswer.question_id);
+            let userEmail = getEmailOfQuestionUser(tempAnswer.question_id);
+            let message = "QuestionId: "  + tempAnswer.question_id + " posted by " + userEmail + ". AnswerId: " + tempAnswer.answer_id +
+                " Text: " + tempAnswer.answer_text + " Please click here to view your question: "
+                + "http://api.dev.aashok.me/v1/question/"+tempAnswer.question_id + " Please click here to view your answer:  http://api.dev.aashok.me/v1/question/"
+                + tempAnswer.question_id
+                +"/answer/"+tempAnswer.answer_id ;
             logger.info("SNS MESSAGE -----" + message);
             let payload = {
                 default: 'Hello World',
@@ -208,6 +210,7 @@ exports.updateAnswer = function (request, response) {
 
     const getAnswerResponse = (answerResponse) => {
         if(answerResponse != null) {
+            tempAnswer = answerResponse;
             if (answerResponse.question_id === request.params.question_id) {
                 let userCredentials = auth(request);
                 if(userCredentials === undefined) {
@@ -305,6 +308,7 @@ exports.deleteAnswer = function (request, response) {
                 message: "Answer deleted successfully"
             });
             logger.info("Constructing message.......................");
+            logger.info("question-id", tempAnswer.question_id);
             let userEmail = getEmailOfQuestionUser(tempAnswer.question_id);
             let message = "QuestionId: "  + tempAnswer.question_id + " posted by " + userEmail + ". AnswerId: " + tempAnswer.answer_id +
                 " Text: " + tempAnswer.answer_text + " Please click here to view your question: "
@@ -461,6 +465,7 @@ exports.getAnswer = function (request, response) {
 function getEmailOfQuestionUser(question_id) {
     questionService.getQuestionByID(question_id)
         .then((question) => {
+            logger.info("question----", question)
             userService.findUserByUserId(question.user_id)
                 .then((user) => {
                     return user.email;
