@@ -312,7 +312,7 @@ exports.deleteAnswer = function (request, response) {
             let userEmail = getEmailOfQuestionUser(tempAnswer.question_id);
             let message = "QuestionId: "  + tempAnswer.question_id + " posted by " + userEmail + ". AnswerId: " + tempAnswer.answer_id +
                 " Text: " + tempAnswer.answer_text + " Please click here to view your question: "
-                + "http://api.dev.aashok.me/v1/question/"+tempAnswer.question_id + " Please click here to view your answer:  http://api.dev.aashok.me/v1/question/"
+                + "http://"+process.env.DOMAINNAME+"/v1/question/"+tempAnswer.question_id + " Please click here to view your answer:  http://"+process.env.DOMAINNAME+"/v1/question/"
                 + tempAnswer.question_id
                 +"/answer/"+tempAnswer.answer_id ;
             logger.info("SNS MESSAGE -----" + message);
@@ -464,16 +464,16 @@ exports.getAnswer = function (request, response) {
 
 function getEmailOfQuestionUser(question_id) {
     logger.info("questionid----"+question_id);
-    questionService.getQuestion(question_id)
+    questionService.getQuestionByID(question_id)
         .then((question) => {
             logger.info("question----"+question);
             userService.findUserByUserId(question.user_id)
                 .then((user) => {
                     return user.email;
                 })
-                .catch(logger.info("unable to find user"));
+                .catch((response) => {logger.info("unable to find user")});
         })
-        .catch(logger.info("unable to find question"));
+        .catch((response) => {logger.info("unable to find question")});
 }
 
 function sendSNSMessage (answer, message) {
