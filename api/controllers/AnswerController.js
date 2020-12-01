@@ -59,7 +59,7 @@ exports.addAnswer = function (request, response) {
             response.json(answerResponse);
             logger.info("Create answer success");
             logger.info("Constructing message.......................");
-             getEmailOfQuestionUser(answerResponse, "Answer got posted", "got answered");
+             getEmailOfQuestionUser(answerResponse, "Answer got posted", " got answered");
             return response;
         } else{
             logger.info("Failed to save answer to db");
@@ -160,7 +160,7 @@ exports.updateAnswer = function (request, response) {
             });
             logger.info("Constructing message.......................");
             logger.info("question-id", tempAnswer.question_id);
-            getEmailOfQuestionUser(tempAnswer, "Answer updated", "answer got updated");
+            getEmailOfQuestionUser(tempAnswer, "Answer updated", " answer got updated");
             return response;
         } else {
             logger.info("Error in updating answer");
@@ -274,7 +274,7 @@ exports.deleteAnswer = function (request, response) {
             });
             logger.info("Constructing message.......................");
             logger.info("question-id", tempAnswer.question_id);
-            getEmailOfQuestionUser(tempAnswer, "Answer deleted", "answer got deleted");
+            getEmailOfQuestionUser(tempAnswer, "Answer deleted", " answer got deleted");
             return response;
         } else {
             logger.info("Answer not found");
@@ -417,11 +417,11 @@ function getEmailOfQuestionUser(answerResponse, subject, text) {
             userService.findUserByUserId(question.user_id)
                 .then((user) => {
                     logger.info("user----"+user.username);
-                    let message = "For QuestionId: "  + answerResponse.question_id + " posted by " + user.username
-                        + text + "\n AnswerId: " + answerResponse.answer_id +
-                        "\n Answer Text: " + answerResponse.answer_text + " \n Please click here to view your question: "
+                    let message = "\tFor QuestionId: "  + answerResponse.question_id + " posted by " + user.username
+                        + text + "\n\t AnswerId: " + answerResponse.answer_id +
+                        "\n Answer Text: " + answerResponse.answer_text + "\n\t Please click here to view your question: "
                         + "http://"+process.env.DOMAINNAME+"/v1/question/"+ answerResponse.question_id +
-                        "\n Please click here to view your answer:  http://"+process.env.DOMAINNAME+"/v1/question/" +
+                        "\n\t Please click here to view your answer:  http://"+process.env.DOMAINNAME+"/v1/question/" +
                         answerResponse.question_id +"/answer/"+answerResponse.answer_id;
                     logger.info("SNS MESSAGE -----" + message);
                     let payload = {
