@@ -59,14 +59,15 @@ exports.addAnswer = function (request, response) {
             response.json(answerResponse);
             logger.info("Create answer success");
             logger.info("Constructing message.......................");
-            let message = "QuestionId: "  + answerResponse.question_id + " posted by " + userCredentials.name + " just got answered. AnswerId: " + answerResponse.answer_id +
+            let userEmail = getEmailOfQuestionUser(answerResponse.question_id);
+            let message = "QuestionId: "  + answerResponse.question_id + " posted by " + userEmail + " just got answered. AnswerId: " + answerResponse.answer_id +
                 " Text: " + answerResponse.answer_text + " Please click here to view your question: "
                 + "http://api.dev.aashok.me/v1/question/"+answerResponse.question_id + " Please click here to view your answer:  http://api.dev.aashok.me/v1/question/" +answerResponse.question_id +"/answer/"+answerResponse.answer_id ;
             logger.info("SNS MESSAGE -----" + message);
             let payload = {
                 default: 'Hello World',
                 data: {
-                    Email: userCredentials.name,
+                    Email: userEmail,
                     Answer: answerResponse,
                     Message: message,
                     Subject: "Answer Posted for Question"
@@ -173,6 +174,26 @@ exports.updateAnswer = function (request, response) {
                 status: 204,
                 message: "Answer updated successfully"
             });
+            logger.info("Constructing message.......................");
+            let userEmail = getEmailOfQuestionUser(updateAnswer.question_id);
+            let message = "QuestionId: "  + updateAnswer.question_id + " posted by " + userEmail + ". AnswerId: " + updateAnswer.answer_id +
+                " Text: " + updateAnswer.answer_text + " Please click here to view your question: "
+                + "http://api.dev.aashok.me/v1/question/"+updateAnswer.question_id + " Please click here to view your answer:  http://api.dev.aashok.me/v1/question/"
+                + updateAnswer.question_id
+                +"/answer/"+updateAnswer.answer_id ;
+            logger.info("SNS MESSAGE -----" + message);
+            let payload = {
+                default: 'Hello World',
+                data: {
+                    Email: userEmail,
+                    Answer: updateAnswer,
+                    Message: message,
+                    Subject: "Answer Updated"
+                }
+            };
+            payload.data = JSON.stringify(payload.data);
+            payload = JSON.stringify(payload);
+            sendSNSMessage(updateAnswer, payload);
             return response;
         } else {
             logger.info("Error in updating answer");
@@ -272,6 +293,8 @@ exports.deleteAnswer = function (request, response) {
         return response;
     }
 
+    let tempAnswer;
+
     const handleDeleteResponse = (deleteAnswer) => {
         sdc.timing('deleteAnswerAPI.timer', apiTimer);
         if(deleteAnswer != null) {
@@ -281,6 +304,26 @@ exports.deleteAnswer = function (request, response) {
                 status: 200,
                 message: "Answer deleted successfully"
             });
+            logger.info("Constructing message.......................");
+            let userEmail = getEmailOfQuestionUser(tempAnswer.question_id);
+            let message = "QuestionId: "  + tempAnswer.question_id + " posted by " + userEmail + ". AnswerId: " + tempAnswer.answer_id +
+                " Text: " + tempAnswer.answer_text + " Please click here to view your question: "
+                + "http://api.dev.aashok.me/v1/question/"+tempAnswer.question_id + " Please click here to view your answer:  http://api.dev.aashok.me/v1/question/"
+                + tempAnswer.question_id
+                +"/answer/"+tempAnswer.answer_id ;
+            logger.info("SNS MESSAGE -----" + message);
+            let payload = {
+                default: 'Hello World',
+                data: {
+                    Email: userEmail,
+                    Answer: tempAnswer,
+                    Message: message,
+                    Subject: "Answer Updated"
+                }
+            };
+            payload.data = JSON.stringify(payload.data);
+            payload = JSON.stringify(payload);
+            sendSNSMessage(tempAnswer, payload);
             return response;
         } else {
             logger.info("Answer not found");
@@ -295,6 +338,7 @@ exports.deleteAnswer = function (request, response) {
 
     const getAnswerResponse = (answerResponse) => {
         if(answerResponse != null) {
+            tempAnswer = answerResponse;
             if (answerResponse.question_id === request.params.question_id) {
                 let userCredentials = auth(request);
                 if(userCredentials === undefined) {
@@ -413,6 +457,18 @@ exports.getAnswer = function (request, response) {
         .then(getResponse)
         .catch(handleDbError(response));
 };
+
+function getEmailOfQuestionUser(question_id) {
+    questionService.getQuestionByID(question_id)
+        .then((question) => {
+            userService.findUserByUserId(question.user_id)
+                .then((user) => {
+                    return user.email;
+                })
+                .catch(logger.info("unable to find user"));
+        })
+        .catch(logger.info("unable to find question"));
+}
 
 function sendSNSMessage (answer, message) {
         logger.info("Sending sns.......................");
