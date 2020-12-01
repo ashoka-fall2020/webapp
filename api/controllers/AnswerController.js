@@ -449,17 +449,18 @@ function getEmailOfQuestionUser(question_id, answerResponse) {
     logger.info("questionid----"+question_id);
     questionService.getQuestionByID(question_id)
         .then((question) => {
-            logger.info("question----"+question);
+            logger.info("question.user_id----"+question.user_id);
             userService.findUserByUserId(question.user_id)
                 .then((user) => {
-                    let message = "QuestionId: "  + answerResponse.question_id + " posted by " + user.email + " just got answered. AnswerId: " + answerResponse.answer_id +
+                    logger.info("user----"+user.username);
+                    let message = "QuestionId: "  + answerResponse.question_id + " posted by " + user.username + " just got answered. AnswerId: " + answerResponse.answer_id +
                         " Text: " + answerResponse.answer_text + " Please click here to view your question: "
                         + "http://api.dev.aashok.me/v1/question/"+answerResponse.question_id + " Please click here to view your answer:  http://api.dev.aashok.me/v1/question/" +answerResponse.question_id +"/answer/"+answerResponse.answer_id ;
                     logger.info("SNS MESSAGE -----" + message);
                     let payload = {
                         default: 'Hello World',
                         data: {
-                            Email: user.email,
+                            Email: user.username,
                             Answer: answerResponse,
                             Message: message,
                             Subject: "Answer Posted for Question"
