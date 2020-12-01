@@ -10,7 +10,7 @@ if(process.env.NODE_ENV !== "production") {
 }
 
 AWS.config.update({
-    region: 'us-east-1'
+    region: process.env.S3REGION
 });
 
 const s3= new AWS.S3();
