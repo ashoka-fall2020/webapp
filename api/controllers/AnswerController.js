@@ -59,24 +59,7 @@ exports.addAnswer = function (request, response) {
             response.json(answerResponse);
             logger.info("Create answer success");
             logger.info("Constructing message.......................");
-            logger.info("question-id" + answerResponse.question_id);
-            let userEmail = getEmailOfQuestionUser(answerResponse.question_id);
-            let message = "QuestionId: "  + answerResponse.question_id + " posted by " + userEmail + " just got answered. AnswerId: " + answerResponse.answer_id +
-                " Text: " + answerResponse.answer_text + " Please click here to view your question: "
-                + "http://api.dev.aashok.me/v1/question/"+answerResponse.question_id + " Please click here to view your answer:  http://api.dev.aashok.me/v1/question/" +answerResponse.question_id +"/answer/"+answerResponse.answer_id ;
-            logger.info("SNS MESSAGE -----" + message);
-            let payload = {
-                default: 'Hello World',
-                data: {
-                    Email: userEmail,
-                    Answer: answerResponse,
-                    Message: message,
-                    Subject: "Answer Posted for Question"
-                }
-            };
-            payload.data = JSON.stringify(payload.data);
-            payload = JSON.stringify(payload);
-            sendSNSMessage(answerResponse, payload);
+             getEmailOfQuestionUser(answerResponse.question_id, answerResponse);
             return response;
         } else{
             logger.info("Failed to save answer to db");
@@ -462,14 +445,29 @@ exports.getAnswer = function (request, response) {
         .catch(handleDbError(response));
 };
 
-function getEmailOfQuestionUser(question_id) {
+function getEmailOfQuestionUser(question_id, answerResponse) {
     logger.info("questionid----"+question_id);
     questionService.getQuestionByID(question_id)
         .then((question) => {
             logger.info("question----"+question);
             userService.findUserByUserId(question.user_id)
                 .then((user) => {
-                    return user.email;
+                    let message = "QuestionId: "  + answerResponse.question_id + " posted by " + user.email + " just got answered. AnswerId: " + answerResponse.answer_id +
+                        " Text: " + answerResponse.answer_text + " Please click here to view your question: "
+                        + "http://api.dev.aashok.me/v1/question/"+answerResponse.question_id + " Please click here to view your answer:  http://api.dev.aashok.me/v1/question/" +answerResponse.question_id +"/answer/"+answerResponse.answer_id ;
+                    logger.info("SNS MESSAGE -----" + message);
+                    let payload = {
+                        default: 'Hello World',
+                        data: {
+                            Email: userEmail,
+                            Answer: answerResponse,
+                            Message: message,
+                            Subject: "Answer Posted for Question"
+                        }
+                    };
+                    payload.data = JSON.stringify(payload.data);
+                    payload = JSON.stringify(payload);
+                    sendSNSMessage(answerResponse, payload);
                 })
                 .catch((response) => {logger.info("unable to find user")});
         })
