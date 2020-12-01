@@ -59,16 +59,17 @@ exports.addAnswer = function (request, response) {
             response.json(answerResponse);
             logger.info("Create answer success");
             logger.info("Sending sns.......................");
-            let message = "QuestionId: "  + question_id + "posted by " + email + "just got answered. AnswerId: " + answer.answer_id +
-                "Text: " + answer.answer_text + "Please click here to view your question: "
-                + "api.dev.aashok.me/v1/"+question_id + "Please click here to view your answer:  api.dev.aashok.me/v1/" +question_id +"/answer/"+answer_id ;
+            let message = "QuestionId: "  + answerResponse.question_id + "posted by " + userCredentials.name + "just got answered. AnswerId: " + answerResponse.answer_id +
+                "Text: " + answerResponse.answer_text + "Please click here to view your question: "
+                + "api.dev.aashok.me/v1/"+answerResponse.question_id + "Please click here to view your answer:  api.dev.aashok.me/v1/" +answerResponse.question_id +"/answer/"+answerResponse.answer_id ;
             logger.info("SNS MESSAGE -----------------", message);
             let params = {
-                Email: email,
+                Email: userCredentials.name,
                 Message: message,
                 Subject: "Answer posted",
                 TopicArn: "arn:aws:sns:us-east-1:825807991620:email-service-topic"
             };
+            logger.info("PARAMS -----------------", params);
             awsConfig.sns.publish(params, function(err, data) {
                 if (err) {
                     logger.error(err);
