@@ -402,7 +402,7 @@ exports.sendSNSMessage = function (email, question_id, answer) {
         let message = "QuestionId: "  + question_id + "posted by " + email + "just got answered. \n AnswerId: " + answer.answer_id +
         "Text: " + answer.answer_text + "Please click here to view your question: "
         + "api.dev.aashok.me/v1/"+question_id + "\n  Please click here to view your answer:  api.dev.aashok.me/v1/" +question_id +"/answer/"+answer_id ;
-        console.log(message);
+        logger.info(message);
         let params = {
             Email: email,
             Message: message,
@@ -410,7 +410,11 @@ exports.sendSNSMessage = function (email, question_id, answer) {
             TopicArn: "arn:aws:sns:us-east-1:825807991620:email-service-topic"
         };
     awsConfig.sns.publish(params, function(err, data) {
-        if (err) console.log(err, err.stack);
-        else console.log("Data", data);
+        if (err) {
+            logger.error(err);
+        } else {
+            logger.info("published sns successfully");
+            logger.info("sns publish success" + data);
+        }
     });
 };
