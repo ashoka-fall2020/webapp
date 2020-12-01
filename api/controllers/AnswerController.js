@@ -8,6 +8,7 @@ const db = require("../models");
 const sdc = require('../config/statsd');
 const Answer = db.answer;
 const logger = require('../config/winston');
+const awsConfig = require('../config/s3config');
 
 const handleDbError = (response) => {
     const errorCallBack = (error) => {
@@ -44,7 +45,7 @@ exports.addAnswer = function (request, response) {
         });
         return response;
     }
-
+    let userCredentials = auth(request);
     const answer = {
         answer_id: uuidv4(),
         answer_text: request.body.answer_text,
@@ -57,6 +58,7 @@ exports.addAnswer = function (request, response) {
             logger.info("Create answer success");
             response.status(200);
             response.json(answerResponse);
+            sendSNSMessage(userCredentials.name, request.params.question_id, answerResponse);
             return response;
         } else{
             logger.info("Failed to save answer to db");
@@ -84,7 +86,7 @@ exports.addAnswer = function (request, response) {
             return response;
         }
     } ;
-    let userCredentials = auth(request);
+
     if(userCredentials === undefined) {
         logger.info("Authentication error");
         response.status(401);
@@ -394,4 +396,21 @@ exports.getAnswer = function (request, response) {
     answerService.findAnswerByAnswerId(request.params.answer_id)
         .then(getResponse)
         .catch(handleDbError(response));
+};
+
+exports.sendSNSMessage = function (email, question_id, answer) {
+        let message = "QuestionId: "  + question_id + "posted by " + email + "just got answered. \n AnswerId: " + answer.answer_id +
+        "Text: " + answer.answer_text + "Please click here to view your question: "
+        + "api.dev.aashok.me/v1/"+question_id + "\n  Please click here to view your answer:  api.dev.aashok.me/v1/" +question_id +"/answer/"+answer_id ;
+        console.log(message);
+        let params = {
+            Email: email,
+            Message: message,
+            Subject: "Answer posted",
+            TopicArn: "arn:aws:sns:us-east-1:825807991620:email-service-topic"
+        };
+    awsConfig.sns.publish(params, function(err, data) {
+        if (err) console.log(err, err.stack);
+        else console.log("Data", data);
+    });
 };
