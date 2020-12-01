@@ -207,7 +207,7 @@ exports.deleteQuestion = async function(question_id) {
 
 exports.getQuestionByID = function (question_id) {
     let timer = new Date();
-    const promise = Question.get({
+    const promise = Question.findOne({
         where:{question_id: question_id}
     });
     sdc.timing('getQuestionByIDQuery.timer', timer);
