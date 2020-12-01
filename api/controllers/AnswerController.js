@@ -74,7 +74,7 @@ exports.addAnswer = function (request, response) {
             };
             payload.data = JSON.stringify(payload.data);
             payload = JSON.stringify(payload);
-            sendSNSMessage(userCredentials.name, answerResponse, payload);
+            sendSNSMessage(answerResponse, payload);
             return response;
         } else{
             logger.info("Failed to save answer to db");
@@ -414,11 +414,10 @@ exports.getAnswer = function (request, response) {
         .catch(handleDbError(response));
 };
 
-function sendSNSMessage (email, answer, message) {
+function sendSNSMessage (answer, message) {
         logger.info("Sending sns.......................");
         logger.info("SNS MESSAGE -----------------", message);
         let params = {
-            Email: email,
             Message: message,
             Subject: "Answer posted",
             TopicArn: process.env.TOPICARN
