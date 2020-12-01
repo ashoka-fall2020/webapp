@@ -459,7 +459,7 @@ function getEmailOfQuestionUser(question_id, answerResponse) {
                     let payload = {
                         default: 'Hello World',
                         data: {
-                            Email: userEmail,
+                            Email: user.email,
                             Answer: answerResponse,
                             Message: message,
                             Subject: "Answer Posted for Question"
