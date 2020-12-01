@@ -55,10 +55,28 @@ exports.addAnswer = function (request, response) {
     const handleAnswerResponse = (answerResponse) => {
         sdc.timing('createAnswerAPI.timer', apiTimer);
         if(answerResponse != null) {
-            logger.info("Create answer success");
-            sendSNSMessage(userCredentials.name, request.params.question_id, answerResponse);
             response.status(200);
             response.json(answerResponse);
+            logger.info("Create answer success");
+            logger.info("Sending sns.......................");
+            let message = "QuestionId: "  + question_id + "posted by " + email + "just got answered. AnswerId: " + answer.answer_id +
+                "Text: " + answer.answer_text + "Please click here to view your question: "
+                + "api.dev.aashok.me/v1/"+question_id + "Please click here to view your answer:  api.dev.aashok.me/v1/" +question_id +"/answer/"+answer_id ;
+            logger.info("SNS MESSAGE -----------------", message);
+            let params = {
+                Email: email,
+                Message: message,
+                Subject: "Answer posted",
+                TopicArn: "arn:aws:sns:us-east-1:825807991620:email-service-topic"
+            };
+            awsConfig.sns.publish(params, function(err, data) {
+                if (err) {
+                    logger.error(err);
+                } else {
+                    logger.info("published sns successfully");
+                    logger.info("sns publish success" + data);
+                }
+            });
             return response;
         } else{
             logger.info("Failed to save answer to db");
@@ -417,5 +435,6 @@ exports.sendSNSMessage = function (email, question_id, answer) {
             logger.info("published sns successfully");
             logger.info("sns publish success" + data);
         }
+        return;
     });
 };
