@@ -8,6 +8,7 @@ const db = require("../models");
 const sdc = require('../config/statsd');
 const Answer = db.answer;
 const logger = require('../config/winston');
+const awsConfig = require('../config/s3config');
 
 const handleDbError = (response) => {
     const errorCallBack = (error) => {
@@ -44,7 +45,7 @@ exports.addAnswer = function (request, response) {
         });
         return response;
     }
-
+    let userCredentials = auth(request);
     const answer = {
         answer_id: uuidv4(),
         answer_text: request.body.answer_text,
@@ -54,9 +55,11 @@ exports.addAnswer = function (request, response) {
     const handleAnswerResponse = (answerResponse) => {
         sdc.timing('createAnswerAPI.timer', apiTimer);
         if(answerResponse != null) {
-            logger.info("Create answer success");
             response.status(200);
             response.json(answerResponse);
+            logger.info("Create answer success");
+            logger.info("Constructing message.......................");
+             getEmailOfQuestionUser(answerResponse, "Answer got posted", " got answered");
             return response;
         } else{
             logger.info("Failed to save answer to db");
@@ -84,7 +87,7 @@ exports.addAnswer = function (request, response) {
             return response;
         }
     } ;
-    let userCredentials = auth(request);
+
     if(userCredentials === undefined) {
         logger.info("Authentication error");
         response.status(401);
@@ -145,7 +148,7 @@ exports.updateAnswer = function (request, response) {
         });
         return;
     }
-
+    let tempAnswer;
     const handleUpdateResponse = (updateAnswer) => {
         sdc.timing('updateAnswerAPI.timer', apiTimer);
         if(updateAnswer != null) {
@@ -155,6 +158,9 @@ exports.updateAnswer = function (request, response) {
                 status: 204,
                 message: "Answer updated successfully"
             });
+            logger.info("Constructing message.......................");
+            logger.info("question-id", tempAnswer.question_id);
+            getEmailOfQuestionUser(tempAnswer, "Answer updated", " answer got updated");
             return response;
         } else {
             logger.info("Error in updating answer");
@@ -169,6 +175,7 @@ exports.updateAnswer = function (request, response) {
 
     const getAnswerResponse = (answerResponse) => {
         if(answerResponse != null) {
+            tempAnswer = answerResponse;
             if (answerResponse.question_id === request.params.question_id) {
                 let userCredentials = auth(request);
                 if(userCredentials === undefined) {
@@ -254,6 +261,8 @@ exports.deleteAnswer = function (request, response) {
         return response;
     }
 
+    let tempAnswer;
+
     const handleDeleteResponse = (deleteAnswer) => {
         sdc.timing('deleteAnswerAPI.timer', apiTimer);
         if(deleteAnswer != null) {
@@ -263,6 +272,9 @@ exports.deleteAnswer = function (request, response) {
                 status: 200,
                 message: "Answer deleted successfully"
             });
+            logger.info("Constructing message.......................");
+            logger.info("question-id", tempAnswer.question_id);
+            getEmailOfQuestionUser(tempAnswer, "Answer deleted", " answer got deleted");
             return response;
         } else {
             logger.info("Answer not found");
@@ -277,6 +289,7 @@ exports.deleteAnswer = function (request, response) {
 
     const getAnswerResponse = (answerResponse) => {
         if(answerResponse != null) {
+            tempAnswer = answerResponse;
             if (answerResponse.question_id === request.params.question_id) {
                 let userCredentials = auth(request);
                 if(userCredentials === undefined) {
@@ -395,3 +408,52 @@ exports.getAnswer = function (request, response) {
         .then(getResponse)
         .catch(handleDbError(response));
 };
+
+function getEmailOfQuestionUser(answerResponse, subject, text) {
+    logger.info("questionid----"+answerResponse.question_id);
+    questionService.getQuestionByID(answerResponse.question_id)
+        .then((question) => {
+            logger.info("question.user_id----"+question.user_id);
+            userService.findUserByUserId(question.user_id)
+                .then((user) => {
+                    logger.info("user----"+user.username);
+                    let message = "For QuestionId: "  + answerResponse.question_id + " posted by " + user.username
+                        + text + "\n\nAnswerId: " + answerResponse.answer_id +
+                        "\n\nAnswer Text: " + answerResponse.answer_text + "\n\nPlease click here to view your question: "
+                        + "http://"+process.env.DOMAINNAME+"/v1/question/"+ answerResponse.question_id +
+                        "\n\nPlease click here to view your answer:  http://"+process.env.DOMAINNAME+"/v1/question/" +
+                        answerResponse.question_id +"/answer/"+answerResponse.answer_id;
+                    logger.info("SNS MESSAGE -----" + message);
+                    let payload = {
+                            Email: user.username,
+                            Answer: answerResponse,
+                            Message: message,
+                            Subject: subject,
+                            Time: new Date().getTime()
+                    };
+                    payload = JSON.stringify(payload);
+                    sendSNSMessage(answerResponse, payload);
+                })
+                .catch((response) => {logger.info("unable to find user")});
+        })
+        .catch((response) => {logger.info("unable to find question")});
+}
+
+function sendSNSMessage (answer, message) {
+        logger.info("Sending sns.......................");
+        logger.info("SNS MESSAGE -----------------", message);
+        let params = {
+            Message: message,
+            Subject: "Answer posted",
+            TopicArn: process.env.TOPICARN
+        };
+    awsConfig.sns.publish(params, function(err, data) {
+        if (err) {
+            logger.error(err);
+        } else {
+            logger.info("published sns successfully");
+            logger.info("sns publish success" + data);
+        }
+        return;
+    });
+}

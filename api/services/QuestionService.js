@@ -8,6 +8,7 @@ const Question_Category = db.question_category;
 const {v4: uuidv4} = require("uuid");
 const s3 = require('../config/s3config');
 const sdc = require('../config/statsd');
+const logger = require('../config/winston');
 
 exports.addQuestion = async function (question) {
     const newQuestion = new Question(question);
@@ -205,12 +206,14 @@ exports.deleteQuestion = async function(question_id) {
     return promise;
 };
 
-exports.getQuestionByID = function (question_id) {
+exports.getQuestionByID = async function (question_id) {
     let timer = new Date();
-    const promise = Question.get({
+    logger.info("question-id  inside function----"+question_id);
+    const promise = await Question.findOne({
         where:{question_id: question_id}
     });
     sdc.timing('getQuestionByIDQuery.timer', timer);
+    logger.info("promise inside function----"+promise);
     return promise;
 };
 
