@@ -428,7 +428,8 @@ function getEmailOfQuestionUser(answerResponse, subject, text) {
                             Email: user.username,
                             Answer: answerResponse,
                             Message: message,
-                            Subject: subject
+                            Subject: subject,
+                            Time: new Date().getTime()
                     };
                     payload = JSON.stringify(payload);
                     sendSNSMessage(answerResponse, payload);
