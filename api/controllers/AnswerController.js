@@ -417,11 +417,11 @@ function getEmailOfQuestionUser(answerResponse, subject, text) {
             userService.findUserByUserId(question.user_id)
                 .then((user) => {
                     logger.info("user----"+user.username);
-                    let message = "\tFor QuestionId: "  + answerResponse.question_id + " posted by " + user.username
-                        + text + "\n\t AnswerId: " + answerResponse.answer_id +
-                        "\n Answer Text: " + answerResponse.answer_text + "\n\t Please click here to view your question: "
+                    let message = "For QuestionId: "  + answerResponse.question_id + " posted by " + user.username
+                        + text + "\n\nAnswerId: " + answerResponse.answer_id +
+                        "\n\nAnswer Text: " + answerResponse.answer_text + "\n\nPlease click here to view your question: "
                         + "http://"+process.env.DOMAINNAME+"/v1/question/"+ answerResponse.question_id +
-                        "\n\t Please click here to view your answer:  http://"+process.env.DOMAINNAME+"/v1/question/" +
+                        "\n\nPlease click here to view your answer:  http://"+process.env.DOMAINNAME+"/v1/question/" +
                         answerResponse.question_id +"/answer/"+answerResponse.answer_id;
                     logger.info("SNS MESSAGE -----" + message);
                     let payload = {
