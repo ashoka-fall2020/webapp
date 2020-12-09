@@ -6,6 +6,9 @@ module.exports = {
     DB: process.env.DATABASE_NAME,
     PORT: process.env.DATABASE_PORT,
     dialect: 'mysql',
+    dialectOptions: {
+        ssl: process.env.SSL_KEY,
+    },
     pool: {
         max: 5,
         min: 0,
