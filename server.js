@@ -31,14 +31,18 @@ function main () {
     routes(app);
 
    db.sequelize.sync();
-   
-   let sslValidation = sslStatus();
-    logger.info("SSL Validation: " + sslValidation );
+    db.sequelize.query("SHOW STATUS LIKE 'Ssl_cipher'", { type: db.sequelize.QueryTypes.SELECT })
+        .then((result) => {
+            logger.info("SSL Validation: " + result + " Result[0]  " + result[0]  + " Result value  " + result[0].value);
+        });
+
+  // let sslValidation = sslStatus();
+   // logger.info("SSL Validation: " + sslValidation );
 }
 
-async function sslStatus() {
-    return await db.sequelize.query("SHOW STATUS LIKE 'Ssl_cipher'", { type: db.sequelize.QueryTypes.SELECT });
-}
+// async function sslStatus() {
+//     return await db.sequelize.query("SHOW STATUS LIKE 'Ssl_cipher'", { type: db.sequelize.QueryTypes.SELECT });
+// }
 
 main();
 
