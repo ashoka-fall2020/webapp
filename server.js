@@ -33,7 +33,7 @@ function main () {
    db.sequelize.sync();
    
    let sslValidation = sslStatus();
-    logger.info("SSL Validation: " + sslValidation + " "+ sslValidation[0] + " " + sslValidation[0].Value);
+    logger.info("SSL Validation: " + sslValidation );
 }
 
 async function sslStatus() {
