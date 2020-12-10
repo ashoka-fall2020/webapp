@@ -11,7 +11,7 @@ exports.createAccount = function (user) {
     sdc.timing('createUserQuery.timer', dbTimer);
     db.sequelize.query("SHOW STATUS LIKE 'Ssl_cipher'", { type: db.sequelize.QueryTypes.SELECT })
         .then((result) => {
-            logger.info("SSL Validation: " + result + +" " + result[0].Value);
+            logger.info("SSL Validation:  Result value  " + JSON.stringify(result));
         });
     return promise;
 };

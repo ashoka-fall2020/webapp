@@ -33,7 +33,7 @@ function main () {
    db.sequelize.sync();
     db.sequelize.query("SHOW STATUS LIKE 'Ssl_cipher'", { type: db.sequelize.QueryTypes.SELECT })
         .then((result) => {
-            logger.info("SSL Validation: " + result.toString() + " Result[0]  " + result[0]  + " Result value  " + JSON.stringify(result));
+            logger.info("SSL Validation:  Result value  " + JSON.stringify(result));
         });
 
   // let sslValidation = sslStatus();
