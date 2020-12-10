@@ -35,14 +35,8 @@ function main () {
         .then((result) => {
             logger.info("SSL Validation:  Result value  " + JSON.stringify(result));
         });
-
-  // let sslValidation = sslStatus();
-   // logger.info("SSL Validation: " + sslValidation );
 }
 
-// async function sslStatus() {
-//     return await db.sequelize.query("SHOW STATUS LIKE 'Ssl_cipher'", { type: db.sequelize.QueryTypes.SELECT });
-// }
 
 main();
 

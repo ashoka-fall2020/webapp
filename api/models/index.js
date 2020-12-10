@@ -28,7 +28,7 @@ const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
         idle: dbConfig.pool.idle
     },
     dialectOptions: {
-        ssl: 'Amazon RDS'
+        ssl: dbConfig.SSL
     }
     // logging: true
 });
