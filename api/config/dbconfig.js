@@ -1,5 +1,5 @@
 require('dotenv').config();
-require('mysql2');
+require('mysql');
 module.exports = {
     HOST: process.env.DATABASE_HOST_NAME,
     USER: process.env.DATABASE_USER_NAME,
