@@ -31,11 +31,11 @@ function main () {
     routes(app);
 
    db.sequelize.sync();
+
    db.sequelize.query("SHOW STATUS LIKE 'Ssl_cipher'", { type: db.sequelize.QueryTypes.SELECT })
         .then((result) => {
-            logger.info("SSL Validation: " + result[0].Value);
+            logger.info("SSL Validation: " + result + +" " + result[0].Value);
         });
-
 }
 
 main();
