@@ -3,7 +3,6 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const db = require("./api/models");
 const logger = require('./api/config/winston');
-require('mysql');
 
 function main () {
     const app = express();
