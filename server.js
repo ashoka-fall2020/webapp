@@ -31,14 +31,12 @@ function main () {
     routes(app);
 
    db.sequelize.sync();
-   
-   let sslValidation = sslStatus();
-    logger.info("SSL Validation: " + sslValidation + " "+ sslValidation[0] + " " + sslValidation[0].Value);
+    db.sequelize.query("SHOW STATUS LIKE 'Ssl_cipher'", { type: db.sequelize.QueryTypes.SELECT })
+        .then((result) => {
+            logger.info("SSL Validation:  Result value  " + JSON.stringify(result));
+        });
 }
 
-async function sslStatus() {
-    return await db.sequelize.query("SHOW STATUS LIKE 'Ssl_cipher'", { type: db.sequelize.QueryTypes.SELECT });
-}
 
 main();
 

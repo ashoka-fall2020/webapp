@@ -9,7 +9,8 @@ if(process.env.NODE_ENV !== "production") {
         host: dbConfig.HOST,
         port: dbConfig.PORT,
         user     : dbConfig.USER ,
-        password : dbConfig.PASSWORD
+        password : dbConfig.PASSWORD,
+
     }).then( connection => {
         connection.query(`CREATE DATABASE IF NOT EXISTS ${dbConfig.DB};`).then((res) => {
             console.info("Database create or successfully checked");
@@ -26,6 +27,9 @@ const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
         acquire: dbConfig.pool.acquire,
         idle: dbConfig.pool.idle
     },
+    dialectOptions: {
+        ssl: dbConfig.SSL
+    }
     // logging: true
 });
 const db = {};
