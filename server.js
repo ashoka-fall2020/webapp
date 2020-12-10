@@ -31,10 +31,10 @@ function main () {
     routes(app);
 
    db.sequelize.sync();
-
-    //  db.sequelize.sync({ force: true }).then(() => {
-    //    console.log("Drop and re-sync db.");
-    // });
+   db.sequelize.query("SHOW STATUS LIKE 'Ssl_cipher'", { type: db.sequelize.QueryTypes.SELECT })
+        .then((result) => {
+            logger.info("SSL Validation: " + result[0].Value);
+        });
 
 }
 
