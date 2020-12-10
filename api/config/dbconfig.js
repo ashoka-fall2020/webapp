@@ -7,7 +7,7 @@ module.exports = {
     PORT: process.env.DATABASE_PORT,
     dialect: 'mysql',
     dialectOptions: {
-        ssl: process.env.SSL_KEY,
+        ssl: 'Amazon RDS',
     },
     pool: {
         max: 5,
